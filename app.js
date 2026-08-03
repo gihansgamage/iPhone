@@ -126,6 +126,29 @@ function setupEventListeners() {
         applyFilters();
     });
 
+    // Theme Toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            themeBtn.innerHTML = newTheme === 'light' ? '<i class="fa-solid fa-moon"></i> Dark Theme' : '<i class="fa-solid fa-sun"></i> Light Theme';
+            renderAnalyticsCharts();
+        });
+    }
+
+    // Price Range Slider
+    const priceSlider = document.getElementById('priceRangeInput');
+    const priceDisplay = document.getElementById('priceRangeValue');
+    if (priceSlider && priceDisplay) {
+        priceSlider.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            priceDisplay.textContent = `LKR ${val.toLocaleString()}`;
+            applyFilters();
+        });
+    }
+
     // Filters
     document.getElementById('storeSelect').addEventListener('change', applyFilters);
     document.getElementById('yearSelect').addEventListener('change', applyFilters);
@@ -141,6 +164,10 @@ function setupEventListeners() {
         document.getElementById('stockSelect').value = 'all';
         document.getElementById('sortSelect').value = 'price_asc';
         document.getElementById('bestDealsOnlyCheckbox').checked = false;
+        if (priceSlider && priceDisplay) {
+            priceSlider.value = 700000;
+            priceDisplay.textContent = 'LKR 700,000';
+        }
         applyFilters();
     });
 
@@ -177,8 +204,13 @@ function applyFilters() {
     const selectedStock = document.getElementById('stockSelect').value;
     const sortBy = document.getElementById('sortSelect').value;
     const bestDealsOnly = document.getElementById('bestDealsOnlyCheckbox').checked;
+    const priceSlider = document.getElementById('priceRangeInput');
+    const maxPrice = priceSlider ? parseInt(priceSlider.value) : Infinity;
 
     filteredProducts = allProducts.filter(p => {
+        // Price filter
+        if (p.price > 0 && p.price > maxPrice) return false;
+
         // Search filter
         if (searchTerm && !p.title.toLowerCase().includes(searchTerm)) return false;
 
