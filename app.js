@@ -1,0 +1,492 @@
+// ==========================================================================
+// iPhone Comparison Dashboard Engine - Vanilla JS Application
+// ==========================================================================
+
+let allProducts = [];
+let filteredProducts = [];
+let selectedCompareIds = new Set();
+let priceByYearChart = null;
+let storeStockChart = null;
+
+// Store Image Fallback map
+const STORE_LOGOS = {
+    'Celltronics': 'https://celltronics.lk/wp-content/uploads/2021/04/Celltronics-Logo.png',
+    'Greenware': 'https://www.greenware.lk/wp-content/uploads/2021/03/greenware-logo.png',
+    'LuxuryX': 'https://luxuryx.lk/wp-content/uploads/2021/08/luxuryx_logo.png',
+    'ONEi': 'https://onei.lk/cdn/shop/files/onei_logo.png',
+    'Rooter': 'https://rooter.lk/cdn/shop/files/rooter_logo.png'
+};
+
+const DEFAULT_IPHONE_IMG = 'https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium?wid=512&hei=512&fmt=p-jpeg';
+
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+});
+
+async function initApp() {
+    setupEventListeners();
+    await loadData();
+}
+
+async function loadData() {
+    try {
+        try {
+            const response = await fetch('data/iphones.json');
+            if (response.ok) {
+                allProducts = await response.json();
+            } else if (window.IPHONE_DATA) {
+                allProducts = window.IPHONE_DATA;
+            } else {
+                throw new Error('Failed to load JSON data');
+            }
+        } catch (fetchErr) {
+            if (window.IPHONE_DATA) {
+                console.log('Loaded dataset via window.IPHONE_DATA fallback (file:// protocol mode)');
+                allProducts = window.IPHONE_DATA;
+            } else {
+                throw fetchErr;
+            }
+        }
+
+        // Calculate best deals
+        computeBestDeals();
+
+        filteredProducts = [...allProducts];
+
+        updateStatsBanner();
+        renderGridView();
+        renderMatrixView();
+        renderAnalyticsCharts();
+    } catch (err) {
+        console.error('Error loading data:', err);
+        document.getElementById('productGridContainer').innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: #f43f5e;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <h3>Unable to load dataset</h3>
+                <p>${err.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Compute lowest price per model to tag "BEST DEAL"
+function computeBestDeals() {
+    const minPrices = {};
+
+    allProducts.forEach(p => {
+        // Normalize model key (e.g. "iphone 16 pro max 256gb")
+        const normKey = p.title.toLowerCase()
+            .replace(/apple\s*/g, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/\s+/g, ' ')
+            .strip ? p.title.toLowerCase().strip() : p.title.toLowerCase().trim();
+
+        if (p.price > 0) {
+            if (!minPrices[normKey] || p.price < minPrices[normKey]) {
+                minPrices[normKey] = p.price;
+            }
+        }
+    });
+
+    allProducts.forEach(p => {
+        const normKey = p.title.toLowerCase()
+            .replace(/apple\s*/g, '')
+            .replace(/\(.*?\)/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        p.isBestDeal = p.price > 0 && minPrices[normKey] && p.price <= minPrices[normKey];
+    });
+}
+
+function updateStatsBanner() {
+    const totalCount = allProducts.length;
+    const lowest = Math.min(...allProducts.filter(p => p.price > 0).map(p => p.price));
+    const inStockCount = allProducts.filter(p => p.in_stock).length;
+
+    document.getElementById('statTotalProducts').textContent = totalCount;
+    document.getElementById('statLowestPrice').textContent = `LKR ${lowest.toLocaleString()}`;
+    document.getElementById('statInStockCount').textContent = `${inStockCount} Models`;
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Search input
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+        clearBtn.style.display = e.target.value ? 'block' : 'none';
+        applyFilters();
+    });
+
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        applyFilters();
+    });
+
+    // Filters
+    document.getElementById('storeSelect').addEventListener('change', applyFilters);
+    document.getElementById('yearSelect').addEventListener('change', applyFilters);
+    document.getElementById('stockSelect').addEventListener('change', applyFilters);
+    document.getElementById('sortSelect').addEventListener('change', applyFilters);
+    document.getElementById('bestDealsOnlyCheckbox').addEventListener('change', applyFilters);
+
+    document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        document.getElementById('storeSelect').value = 'all';
+        document.getElementById('yearSelect').value = 'all';
+        document.getElementById('stockSelect').value = 'all';
+        document.getElementById('sortSelect').value = 'price_asc';
+        document.getElementById('bestDealsOnlyCheckbox').checked = false;
+        applyFilters();
+    });
+
+    // View Switcher Tabs
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const targetView = tab.dataset.view;
+            document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+            document.getElementById(`${targetView}View`).classList.add('active');
+        });
+    });
+
+    // Compare Tray Click
+    document.getElementById('compareTrayTrigger').addEventListener('click', openCompareModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeCompareModal);
+
+    // Refresh Data button
+    document.getElementById('rescrapeBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('rescrapeBtn');
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Refreshing...`;
+        await loadData();
+        btn.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> Refresh Data`;
+    });
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    const selectedStore = document.getElementById('storeSelect').value;
+    const selectedYear = document.getElementById('yearSelect').value;
+    const selectedStock = document.getElementById('stockSelect').value;
+    const sortBy = document.getElementById('sortSelect').value;
+    const bestDealsOnly = document.getElementById('bestDealsOnlyCheckbox').checked;
+
+    filteredProducts = allProducts.filter(p => {
+        // Search filter
+        if (searchTerm && !p.title.toLowerCase().includes(searchTerm)) return false;
+
+        // Store filter
+        if (selectedStore !== 'all' && p.store !== selectedStore) return false;
+
+        // Year filter
+        if (selectedYear !== 'all' && p.year.toString() !== selectedYear) return false;
+
+        // Stock filter
+        if (selectedStock === 'in_stock' && !p.in_stock) return false;
+        if (selectedStock === 'out_stock' && p.in_stock) return false;
+
+        // Best deals filter
+        if (bestDealsOnly && !p.isBestDeal) return false;
+
+        return true;
+    });
+
+    // Sort logic
+    filteredProducts.sort((a, b) => {
+        if (sortBy === 'price_asc') return a.price - b.price;
+        if (sortBy === 'price_desc') return b.price - a.price;
+        if (sortBy === 'year_desc') return b.year - a.year;
+        if (sortBy === 'title_asc') return a.title.localeCompare(b.title);
+        return 0;
+    });
+
+    renderGridView();
+}
+
+// Render Grid View Cards
+function renderGridView() {
+    const container = document.getElementById('productGridContainer');
+    const resultsCount = document.getElementById('resultsCount');
+
+    resultsCount.textContent = `Showing ${filteredProducts.length} of ${allProducts.length} products`;
+
+    if (filteredProducts.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; margin-bottom: 1rem;"></i>
+                <h3>No matching iPhones found</h3>
+                <p>Try resetting filters or searching with a different term.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = filteredProducts.map(p => {
+        const isSelected = selectedCompareIds.has(p.id);
+        const storeClass = p.store.toLowerCase().replace(/[^a-z]/g, '');
+        const imageSrc = (p.image && !p.image.includes('lazy.svg')) ? p.image : DEFAULT_IPHONE_IMG;
+
+        return `
+            <div class="card-product ${p.isBestDeal ? 'is-best-deal' : ''}">
+                ${p.isBestDeal ? '<div class="best-deal-ribbon"><i class="fa-solid fa-bolt"></i> Best Price</div>' : ''}
+                
+                <div class="card-image-area">
+                    <img src="${imageSrc}" alt="${p.title}" onerror="this.onerror=null; this.src='${DEFAULT_IPHONE_IMG}';">
+                </div>
+
+                <div class="card-header-meta">
+                    <span class="badge-store ${storeClass}">${p.store_badge}</span>
+                    <span class="badge-year"><i class="fa-regular fa-calendar-days"></i> ${p.year}</span>
+                </div>
+
+                <h3 class="card-title" title="${p.title}">${p.title}</h3>
+
+                <div class="card-stock-row ${p.in_stock ? 'stock-in' : 'stock-out'}">
+                    <span class="stock-dot"></span>
+                    <span>${p.stock_status}</span>
+                </div>
+
+                <div class="card-footer">
+                    <div class="price-display">${p.price_formatted}</div>
+                    
+                    <div class="card-actions-row">
+                        <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
+                            Store Link <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                        <button class="btn-compare-check ${isSelected ? 'selected' : ''}" 
+                                onclick="toggleCompareItem('${p.id}')" 
+                                title="${isSelected ? 'Remove from compare' : 'Add to compare'}">
+                            <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'}"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Toggle Compare Selection
+function toggleCompareItem(id) {
+    if (selectedCompareIds.has(id)) {
+        selectedCompareIds.delete(id);
+    } else {
+        if (selectedCompareIds.size >= 4) {
+            alert('You can compare up to 4 products at a time.');
+            return;
+        }
+        selectedCompareIds.add(id);
+    }
+
+    updateCompareTray();
+    renderGridView();
+}
+
+function updateCompareTray() {
+    const trigger = document.getElementById('compareTrayTrigger');
+    const countBadge = document.getElementById('compareCount');
+
+    countBadge.textContent = selectedCompareIds.size;
+    trigger.style.display = selectedCompareIds.size > 0 ? 'flex' : 'none';
+}
+
+function openCompareModal() {
+    const modal = document.getElementById('compareModal');
+    const body = document.getElementById('modalCompareBody');
+
+    const selectedItems = allProducts.filter(p => selectedCompareIds.has(p.id));
+
+    if (selectedItems.length === 0) return;
+
+    body.innerHTML = selectedItems.map(p => `
+        <div class="card-product">
+            <div class="card-header-meta">
+                <span class="badge-store ${p.store.toLowerCase()}">${p.store}</span>
+                <span class="badge-year">${p.year}</span>
+            </div>
+            <h3 class="card-title">${p.title}</h3>
+            <div class="price-display" style="color: var(--accent-emerald); margin: 1rem 0;">${p.price_formatted}</div>
+            <div class="card-stock-row ${p.in_stock ? 'stock-in' : 'stock-out'}">
+                <span class="stock-dot"></span> ${p.stock_status}
+            </div>
+            <a href="${p.url}" target="_blank" class="btn btn-primary" style="margin-top: 1rem; width: 100%; justify-content: center;">
+                Go to ${p.store}
+            </a>
+        </div>
+    `).join('');
+
+    modal.classList.add('active');
+}
+
+function closeCompareModal() {
+    document.getElementById('compareModal').classList.remove('active');
+}
+
+// Render Side-by-Side Comparison Matrix Table
+function renderMatrixView() {
+    const tbody = document.getElementById('matrixTableBody');
+
+    // Group products by canonical model family
+    const grouped = {};
+    allProducts.forEach(p => {
+        let key = p.title
+            .replace(/apple\s*/i, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!grouped[key]) {
+            grouped[key] = {
+                model: key,
+                year: p.year,
+                stores: {}
+            };
+        }
+        // Save price under store
+        if (!grouped[key].stores[p.store] || p.price < grouped[key].stores[p.store].price) {
+            grouped[key].stores[p.store] = p;
+        }
+    });
+
+    const rows = Object.values(grouped);
+    // Sort rows by year desc, then model name
+    rows.sort((a, b) => b.year - a.year || a.model.localeCompare(b.model));
+
+    const stores = ['Greenware', 'LuxuryX', 'Rooter', 'ONEi', 'Celltronics'];
+
+    tbody.innerHTML = rows.slice(0, 40).map(r => {
+        // Find lowest price among stores present for this model
+        let lowestPrice = Infinity;
+        stores.forEach(s => {
+            if (r.stores[s] && r.stores[s].price > 0 && r.stores[s].price < lowestPrice) {
+                lowestPrice = r.stores[s].price;
+            }
+        });
+
+        const storeCells = stores.map(s => {
+            const item = r.stores[s];
+            if (!item) return `<td class="cell-na">-</td>`;
+
+            const isLowest = item.price === lowestPrice;
+            return `
+                <td>
+                    <span class="cell-price ${isLowest ? 'lowest' : ''}">
+                        ${item.price_formatted}
+                    </span>
+                </td>
+            `;
+        }).join('');
+
+        // Determine best price store name
+        let bestStore = 'N/A';
+        stores.forEach(s => {
+            if (r.stores[s] && r.stores[s].price === lowestPrice) {
+                bestStore = s;
+            }
+        });
+
+        return `
+            <tr>
+                <td class="cell-model-name">${r.model}</td>
+                <td><span class="badge-year">${r.year}</span></td>
+                ${storeCells}
+                <td><strong style="color: var(--accent-emerald);">${bestStore}</strong></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Render Chart Analytics
+function renderAnalyticsCharts() {
+    const yearAvg = {};
+    const yearCounts = {};
+
+    allProducts.forEach(p => {
+        if (p.price > 0) {
+            yearAvg[p.year] = (yearAvg[p.year] || 0) + p.price;
+            yearCounts[p.year] = (yearCounts[p.year] || 0) + 1;
+        }
+    });
+
+    const years = Object.keys(yearAvg).sort((a, b) => a - b);
+    const avgPrices = years.map(y => Math.round(yearAvg[y] / yearCounts[y]));
+
+    // Chart 1: Avg Price by Year
+    const ctx1 = document.getElementById('priceByYearChart').getContext('2d');
+    if (priceByYearChart) priceByYearChart.destroy();
+    priceByYearChart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: years.map(y => `iPhone ${y}`),
+            datasets: [{
+                label: 'Average Price (LKR)',
+                data: avgPrices,
+                backgroundColor: 'rgba(59, 130, 246, 0.65)',
+                borderColor: '#3b82f6',
+                borderWidth: 1.5,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                },
+                x: {
+                    ticks: { color: '#94a3b8' },
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    // Chart 2: Store breakdown
+    const storeCounts = {};
+    allProducts.forEach(p => {
+        storeCounts[p.store] = (storeCounts[p.store] || 0) + 1;
+    });
+
+    const storeNames = Object.keys(storeCounts);
+    const storeData = storeNames.map(s => storeCounts[s]);
+
+    const ctx2 = document.getElementById('storeStockChart').getContext('2d');
+    if (storeStockChart) storeStockChart.destroy();
+    storeStockChart = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+            labels: storeNames,
+            datasets: [{
+                data: storeData,
+                backgroundColor: [
+                    '#ec4899', // Celltronics
+                    '#10b981', // Greenware
+                    '#f59e0b', // LuxuryX
+                    '#8b5cf6', // ONEi
+                    '#06b6d4'  // Rooter
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#f8fafc', padding: 15 }
+                }
+            }
+        }
+    });
+}
