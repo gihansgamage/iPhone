@@ -140,6 +140,16 @@ function uncheckAllInContainer(containerId) {
     container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
 }
 
+function updateSelectAllState(containerId) {
+    const selectAllCb = document.querySelector(`.select-all-cb[data-target="${containerId}"]`);
+    if (!selectAllCb) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const cbs = container.querySelectorAll('input[type="checkbox"]');
+    const checkedCbs = container.querySelectorAll('input[type="checkbox"]:checked');
+    selectAllCb.checked = (cbs.length > 0 && checkedCbs.length === cbs.length);
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
     // Search input
@@ -184,11 +194,27 @@ function setupEventListeners() {
         });
     }
 
-    // Checklist listeners
+    // Checklist & Select All listeners
+    document.querySelectorAll('.select-all-cb').forEach(selectAllCb => {
+        selectAllCb.addEventListener('change', (e) => {
+            const targetId = e.target.dataset.target;
+            const container = document.getElementById(targetId);
+            if (container) {
+                container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    cb.checked = e.target.checked;
+                });
+                applyFilters();
+            }
+        });
+    });
+
     ['storeChecklist', 'yearChecklist', 'storageChecklist', 'colorChecklist', 'stockChecklist'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-            el.addEventListener('change', applyFilters);
+            el.addEventListener('change', (e) => {
+                updateSelectAllState(id);
+                applyFilters();
+            });
         }
     });
 
@@ -196,9 +222,10 @@ function setupEventListeners() {
     document.getElementById('bestDealsOnlyCheckbox').addEventListener('change', applyFilters);
 
     document.getElementById('resetFiltersBtn').addEventListener('click', () => {
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
+        if (searchInput) searchInput.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
         ['storeChecklist', 'yearChecklist', 'storageChecklist', 'colorChecklist', 'stockChecklist'].forEach(uncheckAllInContainer);
+        document.querySelectorAll('.select-all-cb').forEach(cb => cb.checked = false);
         document.getElementById('sortSelect').value = 'price_asc';
         document.getElementById('bestDealsOnlyCheckbox').checked = false;
         if (priceSlider && priceDisplay) {

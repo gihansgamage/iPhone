@@ -296,9 +296,32 @@ body {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.75rem;
+    gap: 1.5rem;
     position: sticky;
     top: 90px;
+    max-height: calc(100vh - 110px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Custom scrollbar for sidebar filter panel */
+.sidebar-filters-panel::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar-filters-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-filters-panel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 10px;
+}
+.sidebar-filters-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--apple-text-secondary);
+}
+
+[data-theme="dark"] .sidebar-filters-panel::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-header {
@@ -322,6 +345,29 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+}
+
+.filter-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.select-all-label {
+    font-size: 0.76rem;
+    color: var(--apple-blue);
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.select-all-label input[type="checkbox"] {
+    accent-color: var(--apple-blue);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
 }
 
 .filter-title {
