@@ -248,6 +248,28 @@ function setupEventListeners() {
         });
     });
 
+    // Mobile Sidebar Drawer Toggle
+    const mobileToggleBtn = document.getElementById('mobileFilterToggleBtn');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    const sidebarPanel = id => document.getElementById(id);
+    const backdrop = document.getElementById('sidebarBackdrop');
+
+    function openMobileSidebar() {
+        if (sidebarPanel('sidebarFiltersPanel')) sidebarPanel('sidebarFiltersPanel').classList.add('mobile-open');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMobileSidebar() {
+        if (sidebarPanel('sidebarFiltersPanel')) sidebarPanel('sidebarFiltersPanel').classList.remove('mobile-open');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (mobileToggleBtn) mobileToggleBtn.addEventListener('click', openMobileSidebar);
+    if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeMobileSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeMobileSidebar);
+
     // Compare Tray Click
     document.getElementById('compareTrayTrigger').addEventListener('click', openCompareModal);
     document.getElementById('closeModalBtn').addEventListener('click', closeCompareModal);
@@ -345,6 +367,12 @@ function renderActiveFilterTags(searchTerm, stores, years, storages, colors, sto
 
     if (maxPrice < 700000) tags.push({ label: `Max Price: LKR ${maxPrice.toLocaleString()}`, clear: () => { document.getElementById('priceRangeInput').value = 700000; document.getElementById('priceRangeValue').textContent = 'LKR 700,000'; } });
     if (bestDeals) tags.push({ label: `Best Deals Only`, clear: () => { document.getElementById('bestDealsOnlyCheckbox').checked = false; } });
+
+    const badge = document.getElementById('activeFilterBadge');
+    if (badge) {
+        badge.textContent = tags.length;
+        badge.style.display = tags.length > 0 ? 'inline-block' : 'none';
+    }
 
     if (tags.length === 0) {
         container.style.display = 'none';

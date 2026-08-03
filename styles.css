@@ -1020,19 +1020,196 @@ input:checked + .slider:before { transform: translateX(18px); }
     gap: 1.5rem;
 }
 
-/* Responsive Grid Adjustments */
+/* Mobile Filter Trigger Button */
+.mobile-filter-toggle-btn {
+    display: none;
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    background: var(--apple-card-bg);
+    border: 1px solid var(--apple-card-border);
+    border-radius: var(--radius-card);
+    color: var(--apple-text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    box-shadow: var(--apple-card-shadow);
+    margin-bottom: 1.25rem;
+}
+
+.mobile-filter-toggle-btn:hover {
+    background: var(--apple-card-bg-hover);
+}
+
+.sidebar-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mobile-sidebar-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--apple-text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+}
+
+.badge-filter-count {
+    background: var(--apple-blue);
+    color: #ffffff;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-pill);
+    display: none;
+}
+
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    z-index: 999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Comprehensive Mobile Responsive Styles */
 @media (max-width: 992px) {
+    .mobile-filter-toggle-btn {
+        display: flex;
+    }
+
     .content-layout {
         grid-template-columns: 1fr;
     }
+
+    /* Transform Sidebar into Slide-Over Drawer on Mobile */
     .sidebar-filters-panel {
-        position: static;
+        position: fixed;
+        top: 0;
+        left: -340px;
+        width: 320px;
+        max-width: 85vw;
+        height: 100vh;
+        max-height: 100vh;
+        z-index: 1000;
+        border-radius: 0;
+        box-shadow: 10px 0 40px rgba(0, 0, 0, 0.25);
+        transition: left 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        padding-top: 1.75rem;
+    }
+
+    .sidebar-filters-panel.mobile-open {
+        left: 0;
+    }
+
+    .mobile-sidebar-close-btn {
+        display: block !important;
+    }
+
+    .view-controls-bar {
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .view-tabs {
+        flex-shrink: 0;
     }
 }
 
 @media (max-width: 768px) {
-    .hero-title { font-size: 2.25rem; }
-    .hero-subtitle { font-size: 1.1rem; }
-    .app-container { padding: 1.5rem 1rem; }
-    .charts-grid { grid-template-columns: 1fr; }
+    .main-header {
+        padding: 0.75rem 1rem;
+    }
+
+    .logo-container h1 {
+        font-size: 1.05rem;
+    }
+
+    .last-updated {
+        display: none;
+    }
+
+    .hero-title {
+        font-size: 2.2rem;
+        line-height: 1.15;
+    }
+
+    .hero-subtitle {
+        font-size: 1.05rem;
+        padding: 0 0.5rem;
+    }
+
+    .app-container {
+        padding: 1.25rem 0.85rem 3rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .stat-card {
+        padding: 0.85rem 1rem;
+        gap: 0.6rem;
+    }
+
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+    }
+
+    .stat-label {
+        font-size: 0.72rem;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .card-product {
+        padding: 1.15rem;
+    }
+
+    .card-image-area {
+        height: 150px;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 1.85rem;
+    }
+
+    .product-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
 }

@@ -80,14 +80,25 @@
             </div>
         </section>
 
+        <!-- Mobile Filter Toggle Button -->
+        <button class="mobile-filter-toggle-btn" id="mobileFilterToggleBtn">
+            <i class="fa-solid fa-sliders"></i> Filters & Refine <span class="badge-filter-count" id="activeFilterBadge"></span>
+        </button>
+
+        <!-- Sidebar Backdrop for Mobile Drawer -->
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
         <!-- 2-COLUMN LAYOUT: LEFT SIDEBAR FILTERS & RIGHT MAIN CONTENT -->
         <div class="content-layout">
 
             <!-- LEFT SIDEBAR FILTER PANEL -->
-            <aside class="sidebar-filters-panel">
+            <aside class="sidebar-filters-panel" id="sidebarFiltersPanel">
                 <div class="sidebar-header">
                     <h3><i class="fa-solid fa-sliders"></i> Filters</h3>
-                    <button class="btn btn-ghost btn-sm" id="resetFiltersBtn"><i class="fa-solid fa-rotate-left"></i> Reset All</button>
+                    <div class="sidebar-header-actions">
+                        <button class="btn btn-ghost btn-sm" id="resetFiltersBtn"><i class="fa-solid fa-rotate-left"></i> Reset All</button>
+                        <button class="mobile-sidebar-close-btn" id="closeSidebarBtn" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
 
                 <!-- Price Range Slider -->
