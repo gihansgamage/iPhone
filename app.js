@@ -127,23 +127,6 @@ function matchesColor(title, targetColor) {
     return true;
 }
 
-// Setup Event Listeners
-function setupEventListeners() {
-    // Search input
-    const searchInput = document.getElementById('searchInput');
-    const clearBtn = document.getElementById('clearSearchBtn');
-
-    searchInput.addEventListener('input', (e) => {
-        clearBtn.style.display = e.target.value ? 'block' : 'none';
-        applyFilters();
-    });
-
-    clearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
-        applyFilters();
-    });
-
 function getCheckedValues(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return [];
@@ -163,16 +146,20 @@ function setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
     const clearBtn = document.getElementById('clearSearchBtn');
 
-    searchInput.addEventListener('input', (e) => {
-        clearBtn.style.display = e.target.value ? 'block' : 'none';
-        applyFilters();
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            if (clearBtn) clearBtn.style.display = e.target.value ? 'block' : 'none';
+            applyFilters();
+        });
+    }
 
-    clearBtn.addEventListener('click', () => {
-        searchInput.value = '';
-        clearBtn.style.display = 'none';
-        applyFilters();
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (searchInput) searchInput.value = '';
+            clearBtn.style.display = 'none';
+            applyFilters();
+        });
+    }
 
     // Theme Toggle
     const themeBtn = document.getElementById('themeToggleBtn');
