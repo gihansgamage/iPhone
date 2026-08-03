@@ -109,6 +109,54 @@ function updateStatsBanner() {
     document.getElementById('statInStockCount').textContent = `${inStockCount} Models`;
 }
 
+function extractStorage(title) {
+    const match = title.match(/\b(64GB|128GB|256GB|512GB|1TB)\b/i);
+    return match ? match[1].toUpperCase() : null;
+}
+
+function matchesColor(title, targetColor) {
+    if (targetColor === 'all') return true;
+    const t = title.toLowerCase();
+    if (targetColor === 'Black') return t.includes('black') || t.includes('space gray') || t.includes('midnight');
+    if (targetColor === 'White') return t.includes('white') || t.includes('silver') || t.includes('starlight');
+    if (targetColor === 'Titanium') return t.includes('titanium') || t.includes('desert') || t.includes('natural');
+    if (targetColor === 'Blue') return t.includes('blue') || t.includes('ultramarine') || t.includes('pacific');
+    if (targetColor === 'Pink') return t.includes('pink') || t.includes('rose');
+    if (targetColor === 'Green') return t.includes('green') || t.includes('teal');
+    if (targetColor === 'Yellow') return t.includes('yellow') || t.includes('gold');
+    return true;
+}
+
+// Setup Event Listeners
+function setupEventListeners() {
+    // Search input
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+
+    searchInput.addEventListener('input', (e) => {
+        clearBtn.style.display = e.target.value ? 'block' : 'none';
+        applyFilters();
+    });
+
+    clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearBtn.style.display = 'none';
+        applyFilters();
+    });
+
+function getCheckedValues(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return [];
+    const checked = container.querySelectorAll('input[type="checkbox"]:checked');
+    return Array.from(checked).map(cb => cb.value);
+}
+
+function uncheckAllInContainer(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
 // Setup Event Listeners
 function setupEventListeners() {
     // Search input
@@ -149,19 +197,21 @@ function setupEventListeners() {
         });
     }
 
-    // Filters
-    document.getElementById('storeSelect').addEventListener('change', applyFilters);
-    document.getElementById('yearSelect').addEventListener('change', applyFilters);
-    document.getElementById('stockSelect').addEventListener('change', applyFilters);
+    // Checklist listeners
+    ['storeChecklist', 'yearChecklist', 'storageChecklist', 'colorChecklist', 'stockChecklist'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', applyFilters);
+        }
+    });
+
     document.getElementById('sortSelect').addEventListener('change', applyFilters);
     document.getElementById('bestDealsOnlyCheckbox').addEventListener('change', applyFilters);
 
     document.getElementById('resetFiltersBtn').addEventListener('click', () => {
         searchInput.value = '';
         clearBtn.style.display = 'none';
-        document.getElementById('storeSelect').value = 'all';
-        document.getElementById('yearSelect').value = 'all';
-        document.getElementById('stockSelect').value = 'all';
+        ['storeChecklist', 'yearChecklist', 'storageChecklist', 'colorChecklist', 'stockChecklist'].forEach(uncheckAllInContainer);
         document.getElementById('sortSelect').value = 'price_asc';
         document.getElementById('bestDealsOnlyCheckbox').checked = false;
         if (priceSlider && priceDisplay) {
@@ -199,9 +249,11 @@ function setupEventListeners() {
 
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    const selectedStore = document.getElementById('storeSelect').value;
-    const selectedYear = document.getElementById('yearSelect').value;
-    const selectedStock = document.getElementById('stockSelect').value;
+    const selectedStores = getCheckedValues('storeChecklist');
+    const selectedYears = getCheckedValues('yearChecklist');
+    const selectedStorages = getCheckedValues('storageChecklist');
+    const selectedColors = getCheckedValues('colorChecklist');
+    const selectedStocks = getCheckedValues('stockChecklist');
     const sortBy = document.getElementById('sortSelect').value;
     const bestDealsOnly = document.getElementById('bestDealsOnlyCheckbox').checked;
     const priceSlider = document.getElementById('priceRangeInput');
@@ -214,21 +266,42 @@ function applyFilters() {
         // Search filter
         if (searchTerm && !p.title.toLowerCase().includes(searchTerm)) return false;
 
-        // Store filter
-        if (selectedStore !== 'all' && p.store !== selectedStore) return false;
+        // Store filter (Multi-select)
+        if (selectedStores.length > 0 && !selectedStores.includes(p.store)) return false;
 
-        // Year filter
-        if (selectedYear !== 'all' && p.year.toString() !== selectedYear) return false;
+        // Year filter (Multi-select)
+        if (selectedYears.length > 0 && !selectedYears.includes(p.year.toString())) return false;
 
-        // Stock filter
-        if (selectedStock === 'in_stock' && !p.in_stock) return false;
-        if (selectedStock === 'out_stock' && p.in_stock) return false;
+        // Storage filter (Multi-select)
+        if (selectedStorages.length > 0) {
+            const itemStorage = extractStorage(p.title);
+            if (!itemStorage || !selectedStorages.includes(itemStorage)) return false;
+        }
+
+        // Color filter (Multi-select)
+        if (selectedColors.length > 0) {
+            const match = selectedColors.some(c => matchesColor(p.title, c));
+            if (!match) return false;
+        }
+
+        // Stock filter (Multi-select)
+        if (selectedStocks.length > 0) {
+            const isStockMatch = selectedStocks.some(s => {
+                if (s === 'in_stock' && p.in_stock) return true;
+                if (s === 'out_stock' && !p.in_stock) return true;
+                return false;
+            });
+            if (!isStockMatch) return false;
+        }
 
         // Best deals filter
         if (bestDealsOnly && !p.isBestDeal) return false;
 
         return true;
     });
+
+    // Render active filter chips
+    renderActiveFilterTags(searchTerm, selectedStores, selectedYears, selectedStorages, selectedColors, selectedStocks, maxPrice, bestDealsOnly);
 
     // Sort logic
     filteredProducts.sort((a, b) => {
@@ -240,6 +313,46 @@ function applyFilters() {
     });
 
     renderGridView();
+}
+
+function renderActiveFilterTags(searchTerm, stores, years, storages, colors, stocks, maxPrice, bestDeals) {
+    const container = document.getElementById('activeFilterTagsContainer');
+    const tagsList = document.getElementById('tagsList');
+    if (!container || !tagsList) return;
+
+    const tags = [];
+    if (searchTerm) tags.push({ label: `"${searchTerm}"`, clear: () => { document.getElementById('searchInput').value = ''; } });
+    
+    stores.forEach(s => tags.push({ label: `Store: ${s}`, clear: () => uncheckSpecificValue('storeChecklist', s) }));
+    years.forEach(y => tags.push({ label: `Year: ${y}`, clear: () => uncheckSpecificValue('yearChecklist', y) }));
+    storages.forEach(st => tags.push({ label: `Storage: ${st}`, clear: () => uncheckSpecificValue('storageChecklist', st) }));
+    colors.forEach(c => tags.push({ label: `Color: ${c}`, clear: () => uncheckSpecificValue('colorChecklist', c) }));
+    stocks.forEach(stk => tags.push({ label: `Status: ${stk === 'in_stock' ? 'In Stock' : 'Out of Stock'}`, clear: () => uncheckSpecificValue('stockChecklist', stk) }));
+
+    if (maxPrice < 700000) tags.push({ label: `Max Price: LKR ${maxPrice.toLocaleString()}`, clear: () => { document.getElementById('priceRangeInput').value = 700000; document.getElementById('priceRangeValue').textContent = 'LKR 700,000'; } });
+    if (bestDeals) tags.push({ label: `Best Deals Only`, clear: () => { document.getElementById('bestDealsOnlyCheckbox').checked = false; } });
+
+    if (tags.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'flex';
+    tagsList.innerHTML = tags.map((t, idx) => `
+        <span class="active-tag-chip">
+            ${t.label}
+            <i class="fa-solid fa-xmark" onclick="removeFilterTag(${idx})"></i>
+        </span>
+    `).join('');
+
+    window.activeFilterClears = tags.map(t => t.clear);
+}
+
+function uncheckSpecificValue(containerId, val) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const cb = container.querySelector(`input[type="checkbox"][value="${val}"]`);
+    if (cb) cb.checked = false;
 }
 
 // Render Grid View Cards
@@ -438,6 +551,10 @@ function renderAnalyticsCharts() {
     const yearAvg = {};
     const yearCounts = {};
 
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const textColor = isDark ? '#f5f5f7' : '#1d1d1f';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
+
     allProducts.forEach(p => {
         if (p.price > 0) {
             yearAvg[p.year] = (yearAvg[p.year] || 0) + p.price;
@@ -458,8 +575,8 @@ function renderAnalyticsCharts() {
             datasets: [{
                 label: 'Average Price (LKR)',
                 data: avgPrices,
-                backgroundColor: 'rgba(59, 130, 246, 0.65)',
-                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(0, 113, 227, 0.65)',
+                borderColor: '#0071e3',
                 borderWidth: 1.5,
                 borderRadius: 8
             }]
@@ -472,11 +589,11 @@ function renderAnalyticsCharts() {
             },
             scales: {
                 y: {
-                    ticks: { color: '#94a3b8' },
-                    grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                    ticks: { color: textColor },
+                    grid: { color: gridColor }
                 },
                 x: {
-                    ticks: { color: '#94a3b8' },
+                    ticks: { color: textColor },
                     grid: { display: false }
                 }
             }
@@ -516,7 +633,7 @@ function renderAnalyticsCharts() {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: '#f8fafc', padding: 15 }
+                    labels: { color: textColor, padding: 15, font: { family: 'Plus Jakarta Sans', weight: '600' } }
                 }
             }
         }

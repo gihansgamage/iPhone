@@ -80,168 +80,209 @@
             </div>
         </section>
 
-        <!-- Navigation Tabs & View Switcher -->
-        <div class="view-controls-bar">
-            <div class="view-tabs">
-                <button class="tab-btn active" data-view="grid">
-                    <i class="fa-solid fa-border-all"></i> All Models
-                </button>
-                <button class="tab-btn" data-view="matrix">
-                    <i class="fa-solid fa-table-columns"></i> Side-by-Side Matrix
-                </button>
-                <button class="tab-btn" data-view="analytics">
-                    <i class="fa-solid fa-chart-simple"></i> Price Analytics
-                </button>
-            </div>
+        <!-- 2-COLUMN LAYOUT: LEFT SIDEBAR FILTERS & RIGHT MAIN CONTENT -->
+        <div class="content-layout">
 
-            <div class="compare-tray-trigger" id="compareTrayTrigger" style="display: none;">
-                <span class="tray-badge" id="compareCount">0</span>
-                <span>Selected to Compare</span>
-                <i class="fa-solid fa-chevron-right"></i>
-            </div>
+            <!-- LEFT SIDEBAR FILTER PANEL -->
+            <aside class="sidebar-filters-panel">
+                <div class="sidebar-header">
+                    <h3><i class="fa-solid fa-sliders"></i> Filters</h3>
+                    <button class="btn btn-ghost btn-sm" id="resetFiltersBtn"><i class="fa-solid fa-rotate-left"></i> Reset All</button>
+                </div>
+
+                <!-- Price Range Slider -->
+                <div class="filter-section">
+                    <h4 class="filter-title">Max Price</h4>
+                    <div class="price-slider-wrapper">
+                        <span id="priceRangeValue" class="price-val-highlight">LKR 700,000</span>
+                        <input type="range" id="priceRangeInput" min="100000" max="700000" step="10000" value="700000">
+                    </div>
+                </div>
+
+                <!-- Store Checklist -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-solid fa-shop"></i> Store</h4>
+                    <div class="checklist-group" id="storeChecklist">
+                        <label class="checkbox-item"><input type="checkbox" value="Greenware"> <span>Greenware</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="LuxuryX"> <span>LuxuryX</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Rooter"> <span>Rooter</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="ONEi"> <span>ONEi</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Celltronics"> <span>Celltronics</span></label>
+                    </div>
+                </div>
+
+                <!-- Generation Checklist -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-regular fa-calendar"></i> Generation</h4>
+                    <div class="checklist-group" id="yearChecklist">
+                        <label class="checkbox-item"><input type="checkbox" value="2025"> <span>2025 (iPhone 17)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2024"> <span>2024 (iPhone 16)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2023"> <span>2023 (iPhone 15)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2022"> <span>2022 (iPhone 14)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2021"> <span>2021 (iPhone 13)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2020"> <span>2020 (iPhone 12)</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="2019"> <span>2019 (iPhone 11)</span></label>
+                    </div>
+                </div>
+
+                <!-- Storage Checklist -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-solid fa-sd-card"></i> Storage</h4>
+                    <div class="checklist-group" id="storageChecklist">
+                        <label class="checkbox-item"><input type="checkbox" value="64GB"> <span>64 GB</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="128GB"> <span>128 GB</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="256GB"> <span>256 GB</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="512GB"> <span>512 GB</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="1TB"> <span>1 TB</span></label>
+                    </div>
+                </div>
+
+                <!-- Color Checklist -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-solid fa-palette"></i> Color</h4>
+                    <div class="checklist-group" id="colorChecklist">
+                        <label class="checkbox-item"><input type="checkbox" value="Black"> <span>Black / Space Gray</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="White"> <span>White / Silver</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Titanium"> <span>Titanium</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Blue"> <span>Blue / Ultramarine</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Pink"> <span>Pink / Soft Pink</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Green"> <span>Green / Teal</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="Yellow"> <span>Yellow / Gold</span></label>
+                    </div>
+                </div>
+
+                <!-- Availability Checklist -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-solid fa-circle-check"></i> Availability</h4>
+                    <div class="checklist-group" id="stockChecklist">
+                        <label class="checkbox-item"><input type="checkbox" value="in_stock"> <span>In Stock</span></label>
+                        <label class="checkbox-item"><input type="checkbox" value="out_stock"> <span>Out of Stock</span></label>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT MAIN CONTENT AREA -->
+            <main class="main-content-area">
+                <!-- Navigation Tabs & View Switcher -->
+                <div class="view-controls-bar">
+                    <div class="view-tabs">
+                        <button class="tab-btn active" data-view="grid">
+                            <i class="fa-solid fa-border-all"></i> All Models
+                        </button>
+                        <button class="tab-btn" data-view="matrix">
+                            <i class="fa-solid fa-table-columns"></i> Side-by-Side Matrix
+                        </button>
+                        <button class="tab-btn" data-view="analytics">
+                            <i class="fa-solid fa-chart-simple"></i> Price Analytics
+                        </button>
+                    </div>
+
+                    <div class="compare-tray-trigger" id="compareTrayTrigger" style="display: none;">
+                        <span class="tray-badge" id="compareCount">0</span>
+                        <span>Selected to Compare</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+
+                <!-- Search & Active Tags Section -->
+                <div class="search-and-tags-box">
+                    <div class="search-box-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search iPhone model (e.g. '16 Pro Max', '256GB', '15', 'SE')...">
+                        <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <div class="sort-row">
+                        <div class="filter-group">
+                            <label>Sort By:</label>
+                            <select id="sortSelect">
+                                <option value="price_asc">Price: Low to High</option>
+                                <option value="price_desc">Price: High to Low</option>
+                                <option value="year_desc">Newest First</option>
+                                <option value="title_asc">Name: A to Z</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Active Filter Tags Row -->
+                    <div class="active-filter-tags-row" id="activeFilterTagsContainer" style="display: none;">
+                        <span class="active-tags-label">Active Filters:</span>
+                        <div class="tags-list" id="tagsList"></div>
+                    </div>
+                </div>
+
+                <!-- MAIN VIEW 1: PRODUCT CATALOG GRID -->
+                <div class="view-content active" id="gridView">
+                    <div class="results-header">
+                        <p id="resultsCount">Showing 0 products</p>
+                        <div class="best-deal-toggle">
+                            <label class="switch">
+                                <input type="checkbox" id="bestDealsOnlyCheckbox">
+                                <span class="slider round"></span>
+                            </label>
+                            <span>Best Price Deals Only</span>
+                        </div>
+                    </div>
+
+                    <div class="product-grid" id="productGridContainer">
+                        <!-- Dynamic product cards rendered here -->
+                    </div>
+                </div>
+
+                <!-- MAIN VIEW 2: SIDE-BY-SIDE MATRIX TABLE -->
+                <div class="view-content" id="matrixView">
+                    <div class="matrix-header-info">
+                        <h2>Side-by-Side Store Matrix</h2>
+                        <p>Cross-examine store prices for identical models to spot instant savings.</p>
+                    </div>
+
+                    <div class="table-responsive-wrapper">
+                        <table class="comparison-matrix-table" id="matrixTable">
+                            <thead>
+                                <tr>
+                                    <th>iPhone Model</th>
+                                    <th>Year</th>
+                                    <th>Greenware</th>
+                                    <th>LuxuryX</th>
+                                    <th>Rooter</th>
+                                    <th>ONEi</th>
+                                    <th>Celltronics</th>
+                                    <th>Lowest Price Store</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matrixTableBody">
+                                <!-- Dynamic matrix rows rendered here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- MAIN VIEW 3: PRICE ANALYTICS CHART -->
+                <div class="view-content" id="analyticsView">
+                    <div class="analytics-header">
+                        <h2>Price Analytics & Market Insights</h2>
+                        <p>Visual breakdown of average prices and availability per generation across Sri Lanka.</p>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>Average Price by iPhone Generation (LKR)</h3>
+                            <div class="chart-container">
+                                <canvas id="priceByYearChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Product Listings by Store</h3>
+                            <div class="chart-container">
+                                <canvas id="storeStockChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
-
-        <!-- Filter & Search Controls -->
-        <section class="filters-panel">
-            <div class="search-box-wrapper">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="searchInput" placeholder="Search iPhone model (e.g. '16 Pro Max', '256GB', '15', 'SE')...">
-                <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="filter-chips-row">
-                <!-- Store Filter -->
-                <div class="filter-group">
-                    <label>Store:</label>
-                    <select id="storeSelect">
-                        <option value="all">All Stores (5)</option>
-                        <option value="Celltronics">Celltronics</option>
-                        <option value="Greenware">Greenware</option>
-                        <option value="LuxuryX">LuxuryX</option>
-                        <option value="ONEi">ONEi</option>
-                        <option value="Rooter">Rooter</option>
-                    </select>
-                </div>
-
-                <!-- Year / Generation Filter -->
-                <div class="filter-group">
-                    <label>Generation:</label>
-                    <select id="yearSelect">
-                        <option value="all">All Years</option>
-                        <option value="2025">2025 (iPhone 17 / Air)</option>
-                        <option value="2024">2024 (iPhone 16 Series)</option>
-                        <option value="2023">2023 (iPhone 15 Series)</option>
-                        <option value="2022">2022 (iPhone 14 / SE 3)</option>
-                        <option value="2021">2021 (iPhone 13 Series)</option>
-                        <option value="2020">2020 (iPhone 12 Series)</option>
-                        <option value="2019">2019 (iPhone 11)</option>
-                    </select>
-                </div>
-
-                <!-- Stock Filter -->
-                <div class="filter-group">
-                    <label>Availability:</label>
-                    <select id="stockSelect">
-                        <option value="all">All Statuses</option>
-                        <option value="in_stock">In Stock Only</option>
-                        <option value="out_stock">Out of Stock</option>
-                    </select>
-                </div>
-
-                <!-- Price Range Filter Slider -->
-                <div class="filter-group price-range-group">
-                    <label>Max Price: <span id="priceRangeValue" class="price-val-highlight">LKR 700,000</span></label>
-                    <input type="range" id="priceRangeInput" min="100000" max="700000" step="10000" value="700000">
-                </div>
-
-                <!-- Sort By -->
-                <div class="filter-group">
-                    <label>Sort By:</label>
-                    <select id="sortSelect">
-                        <option value="price_asc">Price: Low to High</option>
-                        <option value="price_desc">Price: High to Low</option>
-                        <option value="year_desc">Newest First</option>
-                        <option value="title_asc">Name: A to Z</option>
-                    </select>
-                </div>
-
-                <!-- Reset Filters Button -->
-                <button class="btn btn-ghost" id="resetFiltersBtn">
-                    <i class="fa-solid fa-rotate-left"></i> Reset
-                </button>
-            </div>
-        </section>
-
-        <!-- MAIN VIEW 1: PRODUCT CATALOG GRID -->
-        <main class="view-content active" id="gridView">
-            <div class="results-header">
-                <p id="resultsCount">Showing 0 products</p>
-                <div class="best-deal-toggle">
-                    <label class="switch">
-                        <input type="checkbox" id="bestDealsOnlyCheckbox">
-                        <span class="slider round"></span>
-                    </label>
-                    <span>Best Price Deals Only</span>
-                </div>
-            </div>
-
-            <div class="product-grid" id="productGridContainer">
-                <!-- Dynamic product cards rendered here -->
-            </div>
-        </main>
-
-        <!-- MAIN VIEW 2: SIDE-BY-SIDE MATRIX TABLE -->
-        <main class="view-content" id="matrixView">
-            <div class="matrix-header-info">
-                <h2>Side-by-Side Store Matrix</h2>
-                <p>Cross-examine store prices for identical models to spot instant savings.</p>
-            </div>
-
-            <div class="table-responsive-wrapper">
-                <table class="comparison-matrix-table" id="matrixTable">
-                    <thead>
-                        <tr>
-                            <th>iPhone Model</th>
-                            <th>Year</th>
-                            <th>Greenware</th>
-                            <th>LuxuryX</th>
-                            <th>Rooter</th>
-                            <th>ONEi</th>
-                            <th>Celltronics</th>
-                            <th>Lowest Price Store</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matrixTableBody">
-                        <!-- Dynamic matrix rows rendered here -->
-                    </tbody>
-                </table>
-            </div>
-        </main>
-
-        <!-- MAIN VIEW 3: PRICE ANALYTICS CHART -->
-        <main class="view-content" id="analyticsView">
-            <div class="analytics-header">
-                <h2>Price Analytics & Market Insights</h2>
-                <p>Visual breakdown of average prices and availability per generation across Sri Lanka.</p>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-card">
-                    <h3>Average Price by iPhone Generation (LKR)</h3>
-                    <div class="chart-container">
-                        <canvas id="priceByYearChart"></canvas>
-                    </div>
-                </div>
-                <div class="chart-card">
-                    <h3>Product Listings by Store</h3>
-                    <div class="chart-container">
-                        <canvas id="storeStockChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </main>
     </div>
 
     <!-- COMPARISON MODAL -->
