@@ -291,7 +291,8 @@ function setupEventListeners() {
     // Compare Buttons Click
     const navCompareBtn = document.getElementById('navCompareBtn');
     if (navCompareBtn) navCompareBtn.addEventListener('click', openCompareModal);
-    document.getElementById('compareTrayTrigger').addEventListener('click', openCompareModal);
+    const trayTrigger = document.getElementById('compareTrayTrigger');
+    if (trayTrigger) trayTrigger.addEventListener('click', openCompareModal);
     document.getElementById('closeModalBtn').addEventListener('click', closeCompareModal);
 
     // Refresh Data button
