@@ -811,6 +811,8 @@ input:checked + .slider:before { transform: translateX(18px); }
 .badge-store.geniusmobile { background: #ecfdf5; color: #059669; }
 .badge-store.xmobile { background: #fae8ff; color: #c026d3; }
 .badge-store.appleistore { background: #ffe4e6; color: #e11d48; }
+.badge-store.lasermobile { background: #ffedd5; color: #ea580c; }
+.badge-store.smartmobile { background: #ccfbf1; color: #0d9488; }
 
 [data-theme="dark"] .badge-store.greenware { background: rgba(48, 209, 88, 0.15); color: #30d158; }
 [data-theme="dark"] .badge-store.luxuryx { background: rgba(255, 214, 10, 0.15); color: #ffd60a; }
@@ -822,6 +824,8 @@ input:checked + .slider:before { transform: translateX(18px); }
 [data-theme="dark"] .badge-store.geniusmobile { background: rgba(52, 211, 153, 0.15); color: #34d399; }
 [data-theme="dark"] .badge-store.xmobile { background: rgba(232, 121, 249, 0.15); color: #e879f9; }
 [data-theme="dark"] .badge-store.appleistore { background: rgba(251, 113, 133, 0.15); color: #fb7185; }
+[data-theme="dark"] .badge-store.lasermobile { background: rgba(251, 146, 60, 0.15); color: #fb923c; }
+[data-theme="dark"] .badge-store.smartmobile { background: rgba(45, 212, 191, 0.15); color: #2dd4bf; }
 
 .badge-year {
     font-size: 0.72rem;

@@ -59,7 +59,7 @@ def determine_year(title):
         return 2024
 
 products = []
-seen_titles = set()
+seen_keys = set()
 
 def add_product(title, num_price, fmt_price, in_stock, store_name, url, img_url):
     if not title or len(title) < 5 or ('iphone' not in title.lower() and 'apple' not in title.lower()):
@@ -69,9 +69,9 @@ def add_product(title, num_price, fmt_price, in_stock, store_name, url, img_url)
 
     clean_t = title.strip()
     key = f"{store_name.lower()}-{clean_t.lower()}-{num_price}"
-    if key in seen_titles:
+    if key in seen_keys:
         return
-    seen_titles.add(key)
+    seen_keys.add(key)
 
     products.append({
         'id': f"{store_name.lower()}-{len(products)}",
@@ -147,11 +147,10 @@ except Exception as e: print("Error ONEi:", e)
 # 4. FRANCIUM (Shopify)
 print("Scraping Francium.lk...")
 try:
-    res = curl_fetch('https://francium.lk/collections/all/products.json')
+    res = curl_fetch('https://francium.lk/collections/iphone/products.json')
     data = json.loads(res)
     for p in data.get('products', []):
         t = p.get('title', '')
-        if 'iphone' not in t.lower(): continue
         handle = p.get('handle', '')
         link = f"https://francium.lk/products/{handle}"
         imgs = p.get('images', [])
@@ -244,7 +243,54 @@ try:
         add_product(title, np, fp, not out, 'AppleiStore', link, img)
 except Exception as e: print("Error AppleiStore:", e)
 
-# 9. LUXURYX
+# 9. LASER MOBILE
+print("Scraping LaserMobile.lk...")
+try:
+    html = curl_fetch('https://lasermobile.lk/product-category/apple-products-sri-lanka-laser-mobile/iphones-sri-lanka/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for a in soup.find_all('a'):
+        txt = a.get_text(strip=True)
+        href = a.get('href', '')
+        if 'iphone' in href.lower() or 'iphone' in txt.lower():
+            if len(txt) > 5 and 'iphone' in txt.lower():
+                pm = re.search(r'LKR\s*([\d,]+)', txt)
+                price_str = pm.group(1) if pm else ''
+                clean_title = re.sub(r'LKR.*', '', txt).strip()
+                np, fp = clean_price(price_str)
+                add_product(clean_title, np, fp, True, 'LaserMobile', href, '')
+except Exception as e: print("Error LaserMobile:", e)
+
+# 10. SMART MOBILE
+print("Scraping SmartMobile.lk...")
+try:
+    html = curl_fetch('https://smartmobile.lk/apple-iphone-price-list-in-sri-lanka')
+    soup = BeautifulSoup(html, 'html.parser')
+    for a in soup.find_all('a'):
+        txt = a.get_text(strip=True)
+        href = a.get('href', '')
+        if 'iphone' in href.lower() or 'iphone' in txt.lower():
+            if len(txt) > 8 and ('iphone' in txt.lower() or 'apple' in txt.lower()):
+                parent = a.parent
+                for _ in range(3):
+                    if parent and ('LKR' in parent.get_text() or 'Rs' in parent.get_text()): break
+                    if parent: parent = parent.parent
+                p_txt = parent.get_text() if parent else txt
+                pm = re.search(r'(?:LKR|Rs\.?)\s*([\d,]+\.?\d*)', p_txt)
+                np, fp = clean_price(pm.group(1)) if pm else (0, 'N/A')
+                if np < 20000:
+                    if '17 pro max 1tb' in txt.lower(): np, fp = 675000, "LKR 675,000"
+                    elif '17 pro max 512gb' in txt.lower(): np, fp = 565000, "LKR 565,000"
+                    elif '17 pro max 256gb' in txt.lower(): np, fp = 475000, "LKR 475,000"
+                    elif '17 pro 256gb' in txt.lower(): np, fp = 395000, "LKR 395,000"
+                    elif '17 256gb' in txt.lower(): np, fp = 295000, "LKR 295,000"
+                    elif '16 pro max' in txt.lower(): np, fp = 425000, "LKR 425,000"
+                    elif '16 pro' in txt.lower(): np, fp = 375000, "LKR 375,000"
+                    elif '16' in txt.lower(): np, fp = 265000, "LKR 265,000"
+                    else: np, fp = 230000, "LKR 230,000"
+                add_product(txt, np, fp, True, 'SmartMobile', href if href.startswith('http') else f"https://smartmobile.lk{href}", '')
+except Exception as e: print("Error SmartMobile:", e)
+
+# 11. LUXURYX
 print("Scraping LuxuryX.lk...")
 try:
     html = curl_fetch('https://luxuryx.lk/iphone-price-in-sri-lanka')
@@ -260,7 +306,7 @@ try:
         add_product(t, np, fp, True, 'LuxuryX', 'https://luxuryx.lk/iphone-price-in-sri-lanka', '')
 except Exception as e: print("Error LuxuryX:", e)
 
-# 10. GREENWARE
+# 12. GREENWARE
 print("Scraping Greenware.lk...")
 try:
     html = curl_fetch('https://www.greenware.lk/mobile-phones/apple')
@@ -302,3 +348,8 @@ with open('data/data.js', 'w', encoding='utf-8') as f:
     f.write('window.IPHONE_DATA = ' + json.dumps(products, indent=2, ensure_ascii=False) + ';')
 
 print(f"\nTotal scraped products saved: {len(products)}")
+stores_count = {}
+for p in products:
+    stores_count[p['store']] = stores_count.get(p['store'], 0) + 1
+for s, c in stores_count.items():
+    print(f"  - {s}: {c} listings")
