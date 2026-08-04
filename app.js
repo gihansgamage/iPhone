@@ -467,8 +467,9 @@ function renderGridView() {
                         </a>
                         <button class="btn-compare-check ${isSelected ? 'selected' : ''}" 
                                 onclick="toggleCompareItem('${p.id}')" 
-                                title="${isSelected ? 'Remove from compare' : 'Add to compare'}">
-                            <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'}"></i>
+                                title="${isSelected ? 'Remove from Comparison List' : 'Add to Compare List'}">
+                            <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-scale-balanced'}"></i>
+                            <span>${isSelected ? 'Added' : 'Compare'}</span>
                         </button>
                     </div>
                 </div>
@@ -737,9 +738,17 @@ function renderAnalyticsView() {
                     </div>
                     <div class="card-footer">
                         <div class="price-display">${p.price_formatted}</div>
-                        <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
-                            Go to Store <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                        </a>
+                        <div class="card-actions-row">
+                            <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
+                                Store Link <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                            <button class="btn-compare-check ${selectedCompareIds.has(p.id) ? 'selected' : ''}" 
+                                    onclick="toggleCompareItem('${p.id}')" 
+                                    title="${selectedCompareIds.has(p.id) ? 'Remove from Comparison List' : 'Add to Compare List'}">
+                                <i class="fa-solid ${selectedCompareIds.has(p.id) ? 'fa-check' : 'fa-scale-balanced'}"></i>
+                                <span>${selectedCompareIds.has(p.id) ? 'Added' : 'Compare'}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');

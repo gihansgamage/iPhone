@@ -941,26 +941,36 @@ input:checked + .slider:before { transform: translateX(18px); }
 }
 
 .btn-compare-check {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.05);
-    border: none;
-    color: var(--apple-text-secondary);
+    padding: 0.45rem 0.85rem;
+    border-radius: var(--radius-pill);
+    background: rgba(0, 113, 227, 0.08);
+    border: 1px solid rgba(0, 113, 227, 0.2);
+    color: var(--apple-blue);
+    font-size: 0.78rem;
+    font-weight: 600;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 0.4rem;
     transition: var(--transition-apple);
 }
 
 [data-theme="dark"] .btn-compare-check {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 113, 227, 0.2);
+    border-color: rgba(0, 113, 227, 0.4);
+    color: #38bdf8;
 }
 
-.btn-compare-check:hover, .btn-compare-check.selected {
-    background: var(--apple-text);
-    color: var(--apple-bg);
+.btn-compare-check:hover {
+    background: var(--apple-blue);
+    color: #ffffff;
+    border-color: var(--apple-blue);
+}
+
+.btn-compare-check.selected {
+    background: #34c759;
+    color: #ffffff;
+    border-color: #34c759;
 }
 
 /* Side-by-Side Compact Graphical Heatmap Chart */
