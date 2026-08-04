@@ -253,6 +253,9 @@
                         <button class="tab-btn" data-view="analytics">
                             <i class="fa-solid fa-chart-simple"></i> Price Analytics
                         </button>
+                        <button class="tab-btn" data-view="compare" id="tabCompareBtn">
+                            <i class="fa-solid fa-scale-balanced"></i> Compare (<span id="tabCompareCount">0</span>)
+                        </button>
                     </div>
 
                     <!-- Inline Search Bar next to Price Analytics tab -->
@@ -401,6 +404,24 @@
                         <div class="product-grid" id="analyticsProductGrid">
                             <!-- Dynamic interactive cards rendered here -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- MAIN VIEW 4: DEDICATED COMPARE PHONES PAGE VIEW -->
+                <div class="view-content" id="compareView">
+                    <div class="compare-page-header">
+                        <div class="compare-page-title-group">
+                            <h2><i class="fa-solid fa-scale-balanced" style="color: var(--apple-blue);"></i> Side-by-Side iPhone Model Comparison</h2>
+                            <p>Compare up to 5 iPhone models side-by-side with full store prices, specifications, and availability.</p>
+                        </div>
+                        <button class="btn btn-outline" id="clearCompareListBtn">
+                            <i class="fa-solid fa-trash-can"></i> Clear List
+                        </button>
+                    </div>
+
+                    <!-- 5-Column Side-by-Side Comparison Grid -->
+                    <div class="compare-page-grid" id="comparePageGrid">
+                        <!-- Dynamic up to 5 phone comparison cards rendered here -->
                     </div>
                 </div>
             </main>

@@ -263,8 +263,24 @@ function setupEventListeners() {
 
             if (targetView === 'matrix') renderMatrixView();
             if (targetView === 'analytics') renderAnalyticsView();
+            if (targetView === 'compare') renderCompareView();
         });
     });
+
+function switchToCompareView() {
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => {
+        if (t.dataset.view === 'compare') t.classList.add('active');
+        else t.classList.remove('active');
+    });
+
+    document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+    const compareView = document.getElementById('compareView');
+    if (compareView) compareView.classList.add('active');
+
+    renderCompareView();
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+}
 
     // Mobile Sidebar Drawer Toggle
     const mobileToggleBtn = document.getElementById('mobileFilterToggleBtn');
@@ -288,12 +304,23 @@ function setupEventListeners() {
     if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeMobileSidebar);
     if (backdrop) backdrop.addEventListener('click', closeMobileSidebar);
 
-    // Compare Buttons Click
+    // Compare Buttons & Tab Navigation
     const navCompareBtn = document.getElementById('navCompareBtn');
-    if (navCompareBtn) navCompareBtn.addEventListener('click', openCompareModal);
-    const trayTrigger = document.getElementById('compareTrayTrigger');
-    if (trayTrigger) trayTrigger.addEventListener('click', openCompareModal);
-    document.getElementById('closeModalBtn').addEventListener('click', closeCompareModal);
+    if (navCompareBtn) {
+        navCompareBtn.addEventListener('click', () => {
+            switchToCompareView();
+        });
+    }
+
+    const clearCompareBtn = document.getElementById('clearCompareListBtn');
+    if (clearCompareBtn) {
+        clearCompareBtn.addEventListener('click', () => {
+            selectedCompareIds.clear();
+            updateCompareTray();
+            renderGridView();
+            renderCompareView();
+        });
+    }
 
     // Refresh Data button
     document.getElementById('rescrapeBtn').addEventListener('click', async () => {
@@ -480,13 +507,13 @@ function renderGridView() {
     }).join('');
 }
 
-// Toggle Compare Selection
+// // Toggle Compare Selection (Up to 5 Models)
 function toggleCompareItem(id) {
     if (selectedCompareIds.has(id)) {
         selectedCompareIds.delete(id);
     } else {
-        if (selectedCompareIds.size >= 4) {
-            alert('You can compare up to 4 products at a time.');
+        if (selectedCompareIds.size >= 5) {
+            alert('You can compare up to 5 products at a time.');
             return;
         }
         selectedCompareIds.add(id);
@@ -497,18 +524,77 @@ function toggleCompareItem(id) {
     if (document.getElementById('analyticsView').classList.contains('active')) {
         renderAnalyticsView();
     }
+    if (document.getElementById('compareView').classList.contains('active')) {
+        renderCompareView();
+    }
 }
 
 function updateCompareTray() {
-    const trigger = document.getElementById('compareTrayTrigger');
-    const countBadge = document.getElementById('compareCount');
     const navCountBadge = document.getElementById('navCompareCount');
+    const tabCountBadge = document.getElementById('tabCompareCount');
 
-    if (countBadge) countBadge.textContent = selectedCompareIds.size;
-    if (navCountBadge) {
-        navCountBadge.textContent = selectedCompareIds.size;
+    if (navCountBadge) navCountBadge.textContent = selectedCompareIds.size;
+    if (tabCountBadge) tabCountBadge.textContent = selectedCompareIds.size;
+}
+
+// Render Dedicated 5-Column Compare Phones Page View
+function renderCompareView() {
+    const grid = document.getElementById('comparePageGrid');
+    if (!grid) return;
+
+    const selectedItems = allProducts.filter(p => selectedCompareIds.has(p.id));
+
+    if (selectedItems.length === 0) {
+        grid.innerHTML = `
+            <div class="compare-empty-state">
+                <i class="fa-solid fa-scale-balanced"></i>
+                <h3>No iPhones Added for Comparison</h3>
+                <p>Click the <strong>"+"</strong> icon on any phone card to add up to 5 models to compare side-by-side.</p>
+                <button class="btn btn-primary" onclick="document.querySelector('.tab-btn[data-view=\\'grid\\']').click();" style="margin-top: 1.25rem;">
+                    <i class="fa-solid fa-border-all"></i> Browse All Models
+                </button>
+            </div>
+        `;
+        return;
     }
-    if (trigger) trigger.style.display = selectedCompareIds.size > 0 ? 'flex' : 'none';
+
+    grid.innerHTML = selectedItems.map(p => {
+        const storeClass = p.store.toLowerCase().replace(/[^a-z]/g, '');
+        const imageSrc = (p.image && !p.image.includes('lazy.svg')) ? p.image : DEFAULT_IPHONE_IMG;
+        const storage = extractStorage(p.title) || 'N/A';
+
+        return `
+            <div class="card-product" style="position: relative;">
+                <button class="compare-card-remove-btn" onclick="toggleCompareItem('${p.id}')" title="Remove from comparison">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="card-image-area">
+                    <img src="${imageSrc}" alt="${p.title}" onerror="this.onerror=null; this.src='${DEFAULT_IPHONE_IMG}';">
+                </div>
+
+                <div class="card-header-meta">
+                    <span class="badge-store ${storeClass}">${p.store_badge || p.store}</span>
+                    <span class="badge-year"><i class="fa-regular fa-calendar-days"></i> ${p.year}</span>
+                </div>
+
+                <h3 class="card-title" title="${p.title}">${p.title}</h3>
+
+                <div style="background: rgba(0,0,0,0.03); padding: 0.65rem; border-radius: var(--radius-sm); margin: 0.75rem 0; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                    <div><strong>Storage:</strong> ${storage}</div>
+                    <div><strong>Stock:</strong> <span class="${p.in_stock ? 'stock-in' : 'stock-out'}">${p.stock_status}</span></div>
+                    <div><strong>Store:</strong> ${p.store}</div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="price-display" style="font-size: 1.4rem;">${p.price_formatted}</div>
+                    <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
+                        Store Link <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 function openCompareModal() {

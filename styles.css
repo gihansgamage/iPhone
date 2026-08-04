@@ -1126,8 +1126,76 @@ input:checked + .slider:before { transform: translateX(18px); }
 .tooltip-price { font-size: 0.95rem; font-weight: 800; color: #34c759; margin: 0.2rem 0; }
 .tooltip-stock { font-size: 0.72rem; }
 
-/* Single Dual-Thumb Seek Bar System */
-.single-dual-range-container {
+/* Dedicated Compare Phones Page View */
+.compare-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.compare-page-title-group h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--apple-text);
+    margin-bottom: 0.35rem;
+}
+
+.compare-page-title-group p {
+    color: var(--apple-text-secondary);
+    font-size: 0.95rem;
+}
+
+.compare-page-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.compare-empty-state {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--apple-card-bg);
+    border: 1px dashed var(--apple-card-border);
+    border-radius: var(--radius-card);
+    color: var(--apple-text-secondary);
+}
+
+.compare-empty-state i {
+    font-size: 3rem;
+    color: var(--apple-blue);
+    margin-bottom: 1rem;
+}
+
+.compare-card-remove-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.06);
+    border: none;
+    color: var(--apple-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-apple);
+    z-index: 10;
+}
+
+[data-theme="dark"] .compare-card-remove-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.compare-card-remove-btn:hover {
+    background: #ff3b30;
+    color: #ffffff;
+}
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
