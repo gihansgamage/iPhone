@@ -97,48 +97,60 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Animated Store Names Marquee Banner (Right to Left) */
-.store-marquee-container {
+/* Moving Stores Ticker Banner (Right to Left) */
+.ticker-banner {
+    position: sticky;
+    top: 57px;
+    z-index: 89;
     width: 100%;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(0, 113, 227, 0.05);
+    backdrop-filter: saturate(180%) blur(15px);
+    -webkit-backdrop-filter: saturate(180%) blur(15px);
     border-bottom: 1px solid var(--apple-card-border);
-    padding: 0.65rem 0;
+    padding: 0.5rem 0;
     white-space: nowrap;
-    position: relative;
-    z-index: 85;
 }
 
-[data-theme="dark"] .store-marquee-container {
+[data-theme="dark"] .ticker-banner {
     background: rgba(255, 255, 255, 0.04);
 }
 
-.store-marquee-track {
+.ticker-track {
     display: inline-flex;
-    align-items: center;
-    gap: 1.25rem;
-    animation: marquee-scroll 28s linear infinite;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--apple-text);
+    gap: 2.5rem;
+    animation: ticker-move 30s linear infinite;
 }
 
-.store-marquee-container:hover .store-marquee-track {
+.ticker-track:hover {
     animation-play-state: paused;
 }
 
-.store-marquee-track .dot {
-    color: var(--apple-blue);
-    font-size: 0.75rem;
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--apple-text);
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.2rem 0.75rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--apple-card-border);
 }
 
-@keyframes marquee-scroll {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
+[data-theme="dark"] .ticker-item {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.ticker-item i {
+    color: var(--apple-blue);
+    font-size: 0.78rem;
+}
+
+@keyframes ticker-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
 }
 
 .logo-container {
