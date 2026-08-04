@@ -4535,18 +4535,5 @@
     "store_badge": "Greenware",
     "url": "https://www.greenware.lk/mobile-phones/apple/iphone-11",
     "image": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
-  },
-  {
-    "id": "greenware-349",
-    "title": "Apple iPhone 16E (8GB RAM, 256GB)",
-    "price": 265000,
-    "price_formatted": "LKR 265,000",
-    "in_stock": true,
-    "stock_status": "In Stock",
-    "year": 2024,
-    "store": "Greenware",
-    "store_badge": "Greenware",
-    "url": "https://www.greenware.lk/mobile-phones/apple/iphone-16e-8gb-ram-256gb",
-    "image": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"
   }
 ]
