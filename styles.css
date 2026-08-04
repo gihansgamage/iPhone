@@ -97,6 +97,50 @@ body {
     transition: background 0.3s ease;
 }
 
+/* Animated Store Names Marquee Banner (Right to Left) */
+.store-marquee-container {
+    width: 100%;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid var(--apple-card-border);
+    padding: 0.65rem 0;
+    white-space: nowrap;
+    position: relative;
+    z-index: 85;
+}
+
+[data-theme="dark"] .store-marquee-container {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.store-marquee-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.25rem;
+    animation: marquee-scroll 28s linear infinite;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--apple-text);
+}
+
+.store-marquee-container:hover .store-marquee-track {
+    animation-play-state: paused;
+}
+
+.store-marquee-track .dot {
+    color: var(--apple-blue);
+    font-size: 0.75rem;
+}
+
+@keyframes marquee-scroll {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
 .logo-container {
     display: flex;
     align-items: center;
