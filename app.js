@@ -730,36 +730,42 @@ function renderAnalyticsView() {
         if (filtered.length === 0) {
             grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--apple-text-secondary);">No iPhone models found in this price range & capacity. Try increasing the max price slider!</div>`;
         } else {
-            grid.innerHTML = filtered.map(p => `
-                <div class="card-product ${p.isBestDeal ? 'is-best-deal' : ''}">
-                    ${p.isBestDeal ? '<div class="best-deal-ribbon"><i class="fa-solid fa-bolt"></i> Best Deal</div>' : ''}
-                    <div class="card-image-area">
-                        <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg';">
-                    </div>
-                    <div class="card-header-meta">
-                        <span class="badge-store ${p.store.toLowerCase()}">${p.store}</span>
-                        <span class="badge-year">${p.year}</span>
-                    </div>
-                    <h3 class="card-title" title="${p.title}">${p.title}</h3>
-                    <div class="card-stock-row ${p.in_stock ? 'stock-in' : 'stock-out'}">
-                        <span class="stock-dot"></span>
-                        <span>${p.stock_status}</span>
-                    </div>
-                    <div class="card-footer">
-                        <div class="price-display">${p.price_formatted}</div>
-                        <div class="card-actions-row">
-                            <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
-                                Store Link <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </a>
-                            <button class="btn-compare-check ${selectedCompareIds.has(p.id) ? 'selected' : ''}" 
-                                    onclick="toggleCompareItem('${p.id}')" 
-                                    title="${selectedCompareIds.has(p.id) ? 'Remove from compare list' : 'Add to compare list'}">
-                                <i class="fa-solid ${selectedCompareIds.has(p.id) ? 'fa-check' : 'fa-plus'}"></i>
-                            </button>
+            grid.innerHTML = filtered.map(p => {
+                const isSelected = selectedCompareIds.has(p.id);
+                const storeClass = p.store.toLowerCase().replace(/[^a-z]/g, '');
+                const imageSrc = (p.image && !p.image.includes('lazy.svg')) ? p.image : DEFAULT_IPHONE_IMG;
+
+                return `
+                    <div class="card-product ${p.isBestDeal ? 'is-best-deal' : ''}">
+                        ${p.isBestDeal ? '<div class="best-deal-ribbon"><i class="fa-solid fa-bolt"></i> Best Deal</div>' : ''}
+                        <div class="card-image-area">
+                            <img src="${imageSrc}" alt="${p.title}" loading="lazy" onerror="this.onerror=null; this.src='${DEFAULT_IPHONE_IMG}';">
+                        </div>
+                        <div class="card-header-meta">
+                            <span class="badge-store ${storeClass}">${p.store_badge || p.store}</span>
+                            <span class="badge-year"><i class="fa-regular fa-calendar-days"></i> ${p.year}</span>
+                        </div>
+                        <h3 class="card-title" title="${p.title}">${p.title}</h3>
+                        <div class="card-stock-row ${p.in_stock ? 'stock-in' : 'stock-out'}">
+                            <span class="stock-dot"></span>
+                            <span>${p.stock_status}</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="price-display">${p.price_formatted}</div>
+                            <div class="card-actions-row">
+                                <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
+                                    Store Link <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                </a>
+                                <button class="btn-compare-check ${isSelected ? 'selected' : ''}" 
+                                        onclick="toggleCompareItem('${p.id}')" 
+                                        title="${isSelected ? 'Remove from compare list' : 'Add to compare list'}">
+                                    <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'}"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
     }
 
