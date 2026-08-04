@@ -533,7 +533,7 @@ function closeCompareModal() {
     document.getElementById('compareModal').classList.remove('active');
 }
 
-// Render Side-by-Side Heatmap Matrix Table
+// Render Side-by-Side Compact Graphical Heatmap Chart
 function renderMatrixView() {
     const tbody = document.getElementById('matrixTableBody');
     if (!tbody) return;
@@ -553,86 +553,116 @@ function renderMatrixView() {
                 stores: {}
             };
         }
-        // Save price under store
         if (!grouped[key].stores[p.store] || p.price < grouped[key].stores[p.store].price) {
             grouped[key].stores[p.store] = p;
         }
     });
 
     const rows = Object.values(grouped);
-    // Sort rows by year desc, then model name
     rows.sort((a, b) => b.year - a.year || a.model.localeCompare(b.model));
 
     const stores = ['Greenware', 'LuxuryX', 'Rooter', 'ONEi', 'Celltronics', 'Francium', 'AppleMall', 'GeniusMobile', 'XMobile', 'AppleiStore', 'LaserMobile', 'SmartMobile'];
 
-    tbody.innerHTML = rows.slice(0, 50).map(r => {
-        // Find lowest and highest price among stores present for this model
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    tbody.innerHTML = rows.map(r => {
+        // Find lowest & highest prices in row
         let lowestPrice = Infinity;
         let highestPrice = -Infinity;
-        let validPricesCount = 0;
 
         stores.forEach(s => {
             const item = r.stores[s];
             if (item && item.price > 0 && item.in_stock) {
                 if (item.price < lowestPrice) lowestPrice = item.price;
                 if (item.price > highestPrice) highestPrice = item.price;
-                validPricesCount++;
             }
         });
 
         const storeCells = stores.map(s => {
             const item = r.stores[s];
-            // If unavailable or out of stock in store -> keep clean white / card dark
             if (!item || !item.in_stock || item.price <= 0) {
-                return `<td class="cell-heatmap cell-na">-</td>`;
+                const emptyBg = isDark ? '#1c1c1e' : '#f5f5f7';
+                return `<td class="heatmap-box" style="background: ${emptyBg}; color: var(--apple-text-muted);" title="${r.model} - ${s}: Unavailable">-</td>`;
             }
 
-            const isLowest = item.price === lowestPrice;
-            const isHighest = validPricesCount > 1 && item.price === highestPrice;
+            // Calculate Heatmap Color Gradient
+            let bg = '';
+            let textColor = '#ffffff';
 
-            let cellClass = 'cell-mid';
-            if (isLowest) cellClass = 'cell-lowest';
-            else if (isHighest) cellClass = 'cell-highest';
+            if (item.price === lowestPrice) {
+                bg = isDark ? '#34c759' : '#248a3d'; // Green (Lowest)
+            } else {
+                const range = highestPrice - lowestPrice;
+                const ratio = range > 0 ? (item.price - lowestPrice) / range : 0.5;
+
+                if (ratio < 0.4) {
+                    bg = isDark ? 'rgba(52, 199, 89, 0.45)' : 'rgba(36, 138, 61, 0.3)';
+                    textColor = isDark ? '#34c759' : '#1b5e20';
+                } else if (ratio < 0.7) {
+                    bg = isDark ? 'rgba(255, 204, 0, 0.5)' : 'rgba(217, 119, 6, 0.3)';
+                    textColor = isDark ? '#ffcc00' : '#b45309';
+                } else {
+                    bg = isDark ? 'rgba(255, 149, 0, 0.65)' : 'rgba(225, 29, 72, 0.35)';
+                    textColor = isDark ? '#ff9500' : '#be123c';
+                }
+            }
+
+            const formattedK = Math.round(item.price / 1000) + 'k';
 
             return `
-                <td class="cell-heatmap ${cellClass}">
-                    <span>${item.price_formatted}</span>
-                    ${isLowest ? '<span style="font-size: 0.68rem; display: block; color: var(--apple-green);">Lowest</span>' : ''}
+                <td class="heatmap-box" style="background: ${bg}; color: ${textColor};" onclick="window.open('${item.url}', '_blank')">
+                    ${formattedK}
+                    <div class="heatmap-tooltip">
+                        <div class="tooltip-title">${r.model}</div>
+                        <div class="tooltip-store"><i class="fa-solid fa-shop"></i> ${s}</div>
+                        <div class="tooltip-price">${item.price_formatted}</div>
+                        <div class="tooltip-stock"><i class="fa-solid fa-circle-check" style="color:#34c759;"></i> ${item.stock_status}</div>
+                    </div>
                 </td>
             `;
         }).join('');
 
-        // Determine best price store name
-        let bestStore = 'N/A';
-        stores.forEach(s => {
-            if (r.stores[s] && r.stores[s].price === lowestPrice && r.stores[s].in_stock) {
-                bestStore = s;
-            }
-        });
-
         return `
             <tr>
-                <td class="cell-model-name">${r.model}</td>
-                <td><span class="badge-year">${r.year}</span></td>
+                <td class="cell-model-name" style="text-align: left; padding: 0.3rem 0.5rem; font-size: 0.78rem;" title="${r.model}">${r.model}</td>
+                <td style="text-align: center;"><span class="badge-year" style="font-size: 0.7rem;">${r.year}</span></td>
                 ${storeCells}
-                <td><strong style="color: var(--apple-green); font-weight: 700;">${bestStore}</strong></td>
             </tr>
         `;
     }).join('');
 }
 
 // Global state for Analytics view
+let analyticsMinPrice = 100000;
 let analyticsMaxPrice = 700000;
 let analyticsSelectedStorage = 'all';
 
 function setupAnalyticsControls() {
-    const slider = document.getElementById('analyticsPriceSlider');
-    const label = document.getElementById('analyticsPriceRangeLabel');
+    const minSlider = document.getElementById('analyticsMinPriceSlider');
+    const maxSlider = document.getElementById('analyticsMaxPriceSlider');
+    const minLabel = document.getElementById('analyticsMinPriceLabel');
+    const maxLabel = document.getElementById('analyticsMaxPriceLabel');
 
-    if (slider && label) {
-        slider.addEventListener('input', (e) => {
+    if (minSlider && maxSlider && minLabel && maxLabel) {
+        minSlider.addEventListener('input', (e) => {
+            analyticsMinPrice = parseInt(e.target.value);
+            if (analyticsMinPrice > analyticsMaxPrice) {
+                analyticsMaxPrice = analyticsMinPrice;
+                maxSlider.value = analyticsMaxPrice;
+                maxLabel.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
+            }
+            minLabel.textContent = `LKR ${analyticsMinPrice.toLocaleString()}`;
+            renderAnalyticsView();
+        });
+
+        maxSlider.addEventListener('input', (e) => {
             analyticsMaxPrice = parseInt(e.target.value);
-            label.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
+            if (analyticsMaxPrice < analyticsMinPrice) {
+                analyticsMinPrice = analyticsMaxPrice;
+                minSlider.value = analyticsMinPrice;
+                minLabel.textContent = `LKR ${analyticsMinPrice.toLocaleString()}`;
+            }
+            maxLabel.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
             renderAnalyticsView();
         });
     }
@@ -640,7 +670,7 @@ function setupAnalyticsControls() {
     const pillGroup = document.getElementById('analyticsStoragePills');
     if (pillGroup) {
         pillGroup.querySelectorAll('.pill-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 pillGroup.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 analyticsSelectedStorage = btn.dataset.storage;
@@ -653,7 +683,7 @@ function setupAnalyticsControls() {
 // Render Interactive Price Range Analytics Dashboard
 function renderAnalyticsView() {
     const filtered = allProducts.filter(p => {
-        if (p.price > 0 && p.price > analyticsMaxPrice) return false;
+        if (p.price > 0 && (p.price < analyticsMinPrice || p.price > analyticsMaxPrice)) return false;
         if (analyticsSelectedStorage !== 'all') {
             const st = extractStorage(p.title);
             if (!st || st !== analyticsSelectedStorage) return false;
@@ -663,7 +693,7 @@ function renderAnalyticsView() {
 
     const summaryBar = document.getElementById('analyticsSummaryBar');
     if (summaryBar) {
-        summaryBar.innerHTML = `Found <strong>${filtered.length}</strong> iPhone listings under <strong>LKR ${analyticsMaxPrice.toLocaleString()}</strong> ${analyticsSelectedStorage !== 'all' ? `(${analyticsSelectedStorage})` : ''}`;
+        summaryBar.innerHTML = `Found <strong>${filtered.length}</strong> iPhone listings between <strong>LKR ${analyticsMinPrice.toLocaleString()}</strong> and <strong>LKR ${analyticsMaxPrice.toLocaleString()}</strong> ${analyticsSelectedStorage !== 'all' ? `(${analyticsSelectedStorage})` : ''}`;
     }
 
     // Render Products Grid in Analytics Tab

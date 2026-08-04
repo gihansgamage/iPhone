@@ -291,18 +291,31 @@
                     </div>
                 </div>
 
-                <!-- MAIN VIEW 2: SIDE-BY-SIDE MATRIX TABLE -->
+                <!-- MAIN VIEW 2: SIDE-BY-SIDE MATRIX HEATMAP CHART -->
                 <div class="view-content" id="matrixView">
                     <div class="matrix-header-info">
-                        <h2>Side-by-Side Store Matrix</h2>
-                        <p>Cross-examine store prices for identical models to spot instant savings.</p>
+                        <div class="matrix-title-row">
+                            <div>
+                                <h2>Side-by-Side iPhone Price Heatmap Chart</h2>
+                                <p>Hover over any colored box to inspect exact store price, model specs, and stock availability.</p>
+                            </div>
+
+                            <!-- Heatmap Legend -->
+                            <div class="heatmap-legend">
+                                <span class="legend-label">Price Legend:</span>
+                                <div class="legend-item"><span class="legend-box box-green"></span> Lowest Price</div>
+                                <div class="legend-item"><span class="legend-box box-yellow"></span> Mid Price</div>
+                                <div class="legend-item"><span class="legend-box box-red"></span> High Price</div>
+                                <div class="legend-item"><span class="legend-box box-na"></span> Unavailable</div>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="table-responsive-wrapper">
-                        <table class="comparison-matrix-table" id="matrixTable">
+                    <div class="table-responsive-wrapper compact-matrix-wrapper">
+                        <table class="compact-heatmap-table" id="matrixTable">
                             <thead>
                                 <tr>
-                                    <th>iPhone Model</th>
+                                    <th style="width: 140px; text-align: left;">iPhone Model</th>
                                     <th>Year</th>
                                     <th>Greenware</th>
                                     <th>LuxuryX</th>
@@ -311,14 +324,15 @@
                                     <th>Celltronics</th>
                                     <th>Francium</th>
                                     <th>Apple Mall</th>
-                                    <th>Genius Mobile</th>
+                                    <th>Genius</th>
                                     <th>XMobile</th>
                                     <th>Apple iStore</th>
-                                    <th>Lowest Price Store</th>
+                                    <th>Laser</th>
+                                    <th>Smart</th>
                                 </tr>
                             </thead>
                             <tbody id="matrixTableBody">
-                                <!-- Dynamic matrix rows rendered here -->
+                                <!-- Dynamic compact heatmap boxes rendered here -->
                             </tbody>
                         </table>
                     </div>
@@ -328,21 +342,27 @@
                 <div class="view-content" id="analyticsView">
                     <div class="analytics-header">
                         <h2>Interactive Price Range Analytics & Insights</h2>
-                        <p>Select your target price range and storage capacity to discover matching iPhones, stock availability, and market price distribution across all 12 Sri Lankan stores.</p>
+                        <p>Select your target minimum and maximum price range and storage capacity to discover matching iPhones across all 12 Sri Lankan stores.</p>
                     </div>
 
-                    <!-- Interactive Price Range & Filter Bar for Analytics -->
+                    <!-- Dual Min & Max Price Range Selector -->
                     <div class="analytics-filter-card">
                         <div class="analytics-filter-row">
                             <div class="analytics-filter-group">
-                                <label><i class="fa-solid fa-sliders"></i> Max Price Limit:</label>
-                                <div class="range-inputs-wrapper">
-                                    <span id="analyticsPriceRangeLabel" class="analytics-range-val">LKR 700,000</span>
-                                    <input type="range" id="analyticsPriceSlider" min="100000" max="700000" step="10000" value="700000">
+                                <label><i class="fa-solid fa-sliders"></i> Price Range Window (LKR):</label>
+                                <div class="dual-range-wrapper">
+                                    <div class="range-subfield">
+                                        <span>Min: <strong id="analyticsMinPriceLabel" class="analytics-range-val">LKR 100,000</strong></span>
+                                        <input type="range" id="analyticsMinPriceSlider" min="100000" max="700000" step="10000" value="100000">
+                                    </div>
+                                    <div class="range-subfield">
+                                        <span>Max: <strong id="analyticsMaxPriceLabel" class="analytics-range-val">LKR 700,000</strong></span>
+                                        <input type="range" id="analyticsMaxPriceSlider" min="100000" max="700000" step="10000" value="700000">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="analytics-filter-group">
+                            <div class="analytics-filter-group" style="max-width: 320px;">
                                 <label><i class="fa-solid fa-sd-card"></i> Storage Capacity:</label>
                                 <div class="storage-pill-group" id="analyticsStoragePills">
                                     <button class="pill-btn active" data-storage="all">All Sizes</button>
