@@ -544,7 +544,7 @@ function renderMatrixView() {
     // Sort rows by year desc, then model name
     rows.sort((a, b) => b.year - a.year || a.model.localeCompare(b.model));
 
-    const stores = ['Greenware', 'LuxuryX', 'Rooter', 'ONEi', 'Celltronics'];
+    const stores = ['Greenware', 'LuxuryX', 'Rooter', 'ONEi', 'Celltronics', 'Francium', 'AppleMall', 'GeniusMobile', 'XMobile', 'AppleiStore'];
 
     tbody.innerHTML = rows.slice(0, 40).map(r => {
         // Find lowest price among stores present for this model

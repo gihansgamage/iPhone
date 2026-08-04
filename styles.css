@@ -779,12 +779,22 @@ input:checked + .slider:before { transform: translateX(18px); }
 .badge-store.rooter { background: #e1f5fe; color: var(--store-rooter); }
 .badge-store.onei { background: #f3e5f5; color: var(--store-onei); }
 .badge-store.celltronics { background: #fce4ec; color: var(--store-celltronics); }
+.badge-store.francium { background: #e0f2fe; color: #0284c7; }
+.badge-store.applemall { background: #fef3c7; color: #d97706; }
+.badge-store.geniusmobile { background: #ecfdf5; color: #059669; }
+.badge-store.xmobile { background: #fae8ff; color: #c026d3; }
+.badge-store.appleistore { background: #ffe4e6; color: #e11d48; }
 
 [data-theme="dark"] .badge-store.greenware { background: rgba(48, 209, 88, 0.15); color: #30d158; }
 [data-theme="dark"] .badge-store.luxuryx { background: rgba(255, 214, 10, 0.15); color: #ffd60a; }
 [data-theme="dark"] .badge-store.rooter { background: rgba(100, 210, 255, 0.15); color: #64d2ff; }
 [data-theme="dark"] .badge-store.onei { background: rgba(191, 90, 242, 0.15); color: #bf5af2; }
 [data-theme="dark"] .badge-store.celltronics { background: rgba(255, 55, 95, 0.15); color: #ff375f; }
+[data-theme="dark"] .badge-store.francium { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+[data-theme="dark"] .badge-store.applemall { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+[data-theme="dark"] .badge-store.geniusmobile { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+[data-theme="dark"] .badge-store.xmobile { background: rgba(232, 121, 249, 0.15); color: #e879f9; }
+[data-theme="dark"] .badge-store.appleistore { background: rgba(251, 113, 133, 0.15); color: #fb7185; }
 
 .badge-year {
     font-size: 0.72rem;

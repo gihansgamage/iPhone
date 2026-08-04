@@ -1,6 +1,5 @@
 import urllib.request
 import subprocess
-import ssl
 import json
 import re
 import os
@@ -13,9 +12,6 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
 }
-ctx = ssl.create_default_context()
-ctx.check_hostname = False
-ctx.verify_mode = ssl.CERT_NONE
 
 def curl_fetch(url):
     cmd = ['curl', '-s', '-L', '-m', '25', '-A', headers['User-Agent'], url]
@@ -60,248 +56,249 @@ def determine_year(title):
     elif 'iphone x' in t or 'iphone 8' in t:
         return 2017
     else:
-        return 2023
+        return 2024
 
 products = []
+seen_titles = set()
 
-# 1. SCRAPE CELLTRONICS
+def add_product(title, num_price, fmt_price, in_stock, store_name, url, img_url):
+    if not title or len(title) < 5 or ('iphone' not in title.lower() and 'apple' not in title.lower()):
+        return
+    if num_price < 20000 or num_price > 1500000:
+        return
+
+    clean_t = title.strip()
+    key = f"{store_name.lower()}-{clean_t.lower()}-{num_price}"
+    if key in seen_titles:
+        return
+    seen_titles.add(key)
+
+    products.append({
+        'id': f"{store_name.lower()}-{len(products)}",
+        'title': clean_t,
+        'price': num_price,
+        'price_formatted': fmt_price,
+        'in_stock': in_stock,
+        'stock_status': 'In Stock' if in_stock else 'Out of Stock',
+        'year': determine_year(clean_t),
+        'store': store_name,
+        'store_badge': store_name,
+        'url': url,
+        'image': img_url or 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg'
+    })
+
+# 1. CELLTRONICS
 print("Scraping Celltronics.lk...")
 try:
-    html_c = curl_fetch('https://celltronics.lk/product-category/mobile-phones-price-in-sri-lanka/apple/')
-    soup_c = BeautifulSoup(html_c, 'html.parser')
-    cards_c = soup_c.select('.product, li.product')
-    for c in cards_c:
-        title_el = c.select_one('.woocommerce-loop-product__title, h2, h3')
-        if not title_el:
-            continue
-        title = title_el.get_text(strip=True)
-        if 'iphone' not in title.lower() and 'apple' not in title.lower():
-            continue
-
-        price_el = c.select_one('.price ins .amount, .price .amount, .price')
-        price_text = price_el.get_text(strip=True) if price_el else ''
-        if 'Current price is:' in price_text:
-            price_text = price_text.split('Current price is:')[-1]
-
-        num_price, fmt_price = clean_price(price_text)
-        if num_price < 20000:
-            continue
-
-        link_el = c.select_one('a')
-        url = link_el.get('href') if link_el else 'https://celltronics.lk/product-category/mobile-phones-price-in-sri-lanka/apple/'
-        
+    html = curl_fetch('https://celltronics.lk/product-category/mobile-phones-price-in-sri-lanka/apple/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for c in soup.select('.product, li.product'):
+        t_el = c.select_one('.woocommerce-loop-product__title, h2, h3')
+        if not t_el: continue
+        title = t_el.get_text(strip=True)
+        p_el = c.select_one('.price ins .amount, .price .amount, .price')
+        p_txt = p_el.get_text(strip=True) if p_el else ''
+        if 'Current price is:' in p_txt: p_txt = p_txt.split('Current price is:')[-1]
+        np, fp = clean_price(p_txt)
+        l_el = c.select_one('a')
+        link = l_el.get('href') if l_el else 'https://celltronics.lk'
         img_el = c.select_one('img')
-        img_url = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        img = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        out = 'out-of-stock' in str(c).lower() or 'out of stock' in c.get_text().lower()
+        add_product(title, np, fp, not out, 'Celltronics', link, img)
+except Exception as e: print("Error Celltronics:", e)
 
-        is_out = 'out-of-stock' in str(c).lower() or 'out of stock' in c.get_text().lower()
-
-        products.append({
-            'id': f"celltronics-{len(products)}",
-            'title': title,
-            'price': num_price,
-            'price_formatted': fmt_price,
-            'in_stock': not is_out,
-            'stock_status': 'Out of Stock' if is_out else 'In Stock',
-            'year': determine_year(title),
-            'store': 'Celltronics',
-            'store_badge': 'Celltronics',
-            'url': url,
-            'image': img_url or 'https://celltronics.lk/wp-content/uploads/2021/04/Celltronics-Logo.png'
-        })
-    print(f"Celltronics: Scraped {len([p for p in products if p['store'] == 'Celltronics'])} items.")
-except Exception as e:
-    print("Error scraping Celltronics:", e)
-
-
-# 2. SCRAPE ROOTER (Shopify)
+# 2. ROOTER (Shopify)
 print("Scraping Rooter.lk...")
 try:
-    json_r = curl_fetch('https://rooter.lk/collections/iphones/products.json')
-    data_r = json.loads(json_r)
-    for p in data_r.get('products', []):
-        title = p.get('title', '')
-        if 'iphone' not in title.lower():
-            continue
-        
+    res = curl_fetch('https://rooter.lk/collections/iphones/products.json')
+    data = json.loads(res)
+    for p in data.get('products', []):
+        t = p.get('title', '')
         handle = p.get('handle', '')
-        url = f"https://rooter.lk/products/{handle}"
-        
-        images = p.get('images', [])
-        img_url = images[0]['src'] if images else ''
-
+        link = f"https://rooter.lk/products/{handle}"
+        imgs = p.get('images', [])
+        img = imgs[0]['src'] if imgs else ''
         for v in p.get('variants', []):
-            var_title = v.get('title', '')
-            full_title = f"{title} ({var_title})" if var_title and var_title != 'Default Title' else title
-            num_price, fmt_price = clean_price(str(v.get('price', 0)))
-            if num_price < 20000:
-                continue
+            vt = v.get('title', '')
+            full_t = f"{t} ({vt})" if vt and vt != 'Default Title' else t
+            np, fp = clean_price(str(v.get('price', 0)))
+            add_product(full_t, np, fp, v.get('available', True), 'Rooter', link, img)
+except Exception as e: print("Error Rooter:", e)
 
-            available = v.get('available', True)
-
-            products.append({
-                'id': f"rooter-{len(products)}",
-                'title': full_title,
-                'price': num_price,
-                'price_formatted': fmt_price,
-                'in_stock': available,
-                'stock_status': 'In Stock' if available else 'Out of Stock',
-                'year': determine_year(full_title),
-                'store': 'Rooter',
-                'store_badge': 'Rooter',
-                'url': url,
-                'image': img_url or 'https://rooter.lk/cdn/shop/files/rooter_logo.png'
-            })
-    print(f"Rooter: Scraped {len([p for p in products if p['store'] == 'Rooter'])} items.")
-except Exception as e:
-    print("Error scraping Rooter:", e)
-
-
-# 3. SCRAPE ONEI (Shopify)
+# 3. ONEI (Shopify)
 print("Scraping OneI.lk...")
 try:
-    json_o = curl_fetch('https://onei.lk/collections/new-iphones/products.json')
-    data_o = json.loads(json_o)
-    for p in data_o.get('products', []):
-        title = p.get('title', '')
-        if 'iphone' not in title.lower():
-            continue
-
+    res = curl_fetch('https://onei.lk/collections/new-iphones/products.json')
+    data = json.loads(res)
+    for p in data.get('products', []):
+        t = p.get('title', '')
         handle = p.get('handle', '')
-        url = f"https://onei.lk/collections/new-iphones/products/{handle}"
-
-        images = p.get('images', [])
-        img_url = images[0]['src'] if images else ''
-
+        link = f"https://onei.lk/collections/new-iphones/products/{handle}"
+        imgs = p.get('images', [])
+        img = imgs[0]['src'] if imgs else ''
         for v in p.get('variants', []):
-            var_title = v.get('title', '')
-            full_title = f"{title} ({var_title})" if var_title and var_title != 'Default Title' else title
-            num_price, fmt_price = clean_price(str(v.get('price', 0)))
-            if num_price < 20000:
-                continue
+            vt = v.get('title', '')
+            full_t = f"{t} ({vt})" if vt and vt != 'Default Title' else t
+            np, fp = clean_price(str(v.get('price', 0)))
+            add_product(full_t, np, fp, v.get('available', True), 'ONEi', link, img)
+except Exception as e: print("Error ONEi:", e)
 
-            available = v.get('available', True)
+# 4. FRANCIUM (Shopify)
+print("Scraping Francium.lk...")
+try:
+    res = curl_fetch('https://francium.lk/collections/all/products.json')
+    data = json.loads(res)
+    for p in data.get('products', []):
+        t = p.get('title', '')
+        if 'iphone' not in t.lower(): continue
+        handle = p.get('handle', '')
+        link = f"https://francium.lk/products/{handle}"
+        imgs = p.get('images', [])
+        img = imgs[0]['src'] if imgs else ''
+        for v in p.get('variants', []):
+            vt = v.get('title', '')
+            full_t = f"{t} ({vt})" if vt and vt != 'Default Title' else t
+            np, fp = clean_price(str(v.get('price', 0)))
+            add_product(full_t, np, fp, v.get('available', True), 'Francium', link, img)
+except Exception as e: print("Error Francium:", e)
 
-            products.append({
-                'id': f"onei-{len(products)}",
-                'title': full_title,
-                'price': num_price,
-                'price_formatted': fmt_price,
-                'in_stock': available,
-                'stock_status': 'In Stock' if available else 'Out of Stock',
-                'year': determine_year(full_title),
-                'store': 'ONEi',
-                'store_badge': 'ONEi',
-                'url': url,
-                'image': img_url or 'https://onei.lk/cdn/shop/files/onei_logo.png'
-            })
-    print(f"OneI: Scraped {len([p for p in products if p['store'] == 'ONEi'])} items.")
-except Exception as e:
-    print("Error scraping OneI:", e)
+# 5. APPLE MALL
+print("Scraping AppleMall.lk...")
+try:
+    html = curl_fetch('https://www.applemall.lk/product-category/iphone/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for c in soup.select('.product, li.product'):
+        t_el = c.select_one('.woocommerce-loop-product__title, h2, h3, .product-title')
+        if not t_el: continue
+        title = t_el.get_text(strip=True)
+        p_el = c.select_one('.price ins .amount, .price .amount, .price')
+        p_txt = p_el.get_text(strip=True) if p_el else ''
+        if 'Current price is:' in p_txt: p_txt = p_txt.split('Current price is:')[-1]
+        np, fp = clean_price(p_txt)
+        l_el = c.select_one('a')
+        link = l_el.get('href') if l_el else 'https://www.applemall.lk'
+        img_el = c.select_one('img')
+        img = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        out = 'out-of-stock' in str(c).lower()
+        add_product(title, np, fp, not out, 'AppleMall', link, img)
+except Exception as e: print("Error AppleMall:", e)
 
+# 6. GENIUS MOBILE
+print("Scraping GeniusMobile.lk...")
+try:
+    html = curl_fetch('https://www.geniusmobile.lk/product-category/smartphones-sri-lanka/iphones/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for c in soup.select('.product, li.product'):
+        t_el = c.select_one('.woocommerce-loop-product__title, h2, h3')
+        if not t_el: continue
+        title = t_el.get_text(strip=True)
+        p_el = c.select_one('.price ins .amount, .price .amount, .price')
+        p_txt = p_el.get_text(strip=True) if p_el else ''
+        np, fp = clean_price(p_txt)
+        l_el = c.select_one('a')
+        link = l_el.get('href') if l_el else 'https://www.geniusmobile.lk'
+        img_el = c.select_one('img')
+        img = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        out = 'out-of-stock' in str(c).lower()
+        add_product(title, np, fp, not out, 'GeniusMobile', link, img)
+except Exception as e: print("Error GeniusMobile:", e)
 
-# 4. SCRAPE LUXURYX
+# 7. XMOBILE
+print("Scraping XMobile.lk...")
+try:
+    html = curl_fetch('https://xmobile.lk/product-category/mobile-phones/apple/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for c in soup.select('.product, li.product'):
+        t_el = c.select_one('.woocommerce-loop-product__title, h2, h3')
+        if not t_el: continue
+        title = t_el.get_text(strip=True)
+        p_el = c.select_one('.price ins .amount, .price .amount, .price')
+        p_txt = p_el.get_text(strip=True) if p_el else ''
+        np, fp = clean_price(p_txt)
+        l_el = c.select_one('a')
+        link = l_el.get('href') if l_el else 'https://xmobile.lk'
+        img_el = c.select_one('img')
+        img = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        out = 'out-of-stock' in str(c).lower()
+        add_product(title, np, fp, not out, 'XMobile', link, img)
+except Exception as e: print("Error XMobile:", e)
+
+# 8. APPLE ISTORE
+print("Scraping AppleiStore.lk...")
+try:
+    html = curl_fetch('https://appleistore.lk/product-category/iphones/')
+    soup = BeautifulSoup(html, 'html.parser')
+    for c in soup.select('.product, li.product'):
+        t_el = c.select_one('.woocommerce-loop-product__title, h2, h3')
+        if not t_el: continue
+        title = t_el.get_text(strip=True)
+        p_el = c.select_one('.price ins .amount, .price .amount, .price')
+        p_txt = p_el.get_text(strip=True) if p_el else ''
+        np, fp = clean_price(p_txt)
+        l_el = c.select_one('a')
+        link = l_el.get('href') if l_el else 'https://appleistore.lk'
+        img_el = c.select_one('img')
+        img = img_el.get('src') or img_el.get('data-src') if img_el else ''
+        out = 'out-of-stock' in str(c).lower()
+        add_product(title, np, fp, not out, 'AppleiStore', link, img)
+except Exception as e: print("Error AppleiStore:", e)
+
+# 9. LUXURYX
 print("Scraping LuxuryX.lk...")
 try:
-    html_l = curl_fetch('https://luxuryx.lk/iphone-price-in-sri-lanka')
-    soup_l = BeautifulSoup(html_l, 'html.parser')
-    text_l = soup_l.get_text()
-
-    matches = re.findall(r'(iPhone\s+[A-Za-z0-9\s]+?)\s*LKR\s*([\d,]+\.?\d*)', text_l, re.I)
-    seen_luxury = set()
+    html = curl_fetch('https://luxuryx.lk/iphone-price-in-sri-lanka')
+    soup = BeautifulSoup(html, 'html.parser')
+    matches = re.findall(r'(iPhone\s+[A-Za-z0-9\s]+?)\s*LKR\s*([\d,]+\.?\d*)', soup.get_text(), re.I)
+    seen_lux = set()
     for model, price_str in matches:
-        title = model.strip()
-        num_price, fmt_price = clean_price(price_str)
-        if num_price < 20000:
-            continue
-        
-        key = f"{title.lower()}-{num_price}"
-        if key in seen_luxury:
-            continue
-        seen_luxury.add(key)
+        t = f"Apple {model.strip()}"
+        np, fp = clean_price(price_str)
+        key = f"{t.lower()}-{np}"
+        if key in seen_lux: continue
+        seen_lux.add(key)
+        add_product(t, np, fp, True, 'LuxuryX', 'https://luxuryx.lk/iphone-price-in-sri-lanka', '')
+except Exception as e: print("Error LuxuryX:", e)
 
-        products.append({
-            'id': f"luxuryx-{len(products)}",
-            'title': f"Apple {title}",
-            'price': num_price,
-            'price_formatted': fmt_price,
-            'in_stock': True,
-            'stock_status': 'In Stock',
-            'year': determine_year(title),
-            'store': 'LuxuryX',
-            'store_badge': 'LuxuryX',
-            'url': 'https://luxuryx.lk/iphone-price-in-sri-lanka',
-            'image': 'https://luxuryx.lk/wp-content/uploads/2021/08/luxuryx_logo.png'
-        })
-    print(f"LuxuryX: Scraped {len([p for p in products if p['store'] == 'LuxuryX'])} items.")
-except Exception as e:
-    print("Error scraping LuxuryX:", e)
-
-
-# 5. SCRAPE GREENWARE
+# 10. GREENWARE
 print("Scraping Greenware.lk...")
 try:
-    html_g = curl_fetch('https://www.greenware.lk/mobile-phones/apple')
-    soup_g = BeautifulSoup(html_g, 'html.parser')
-    
-    seen_greenware = set()
-    for a in soup_g.find_all('a'):
+    html = curl_fetch('https://www.greenware.lk/mobile-phones/apple')
+    soup = BeautifulSoup(html, 'html.parser')
+    seen_gw = set()
+    for a in soup.find_all('a'):
         txt = a.get_text(separator=' ', strip=True)
         href = a.get('href', '')
         if 'iphone' in href.lower() or 'iphone' in txt.lower():
             if len(txt) > 5 and ('Apple' in txt or 'iPhone' in txt):
+                clean_title = re.sub(r'Rated.*|Display:.*|Processor:.*|SKU:.*', '', txt).strip()
+                if clean_title.lower() in seen_gw: continue
+                seen_gw.add(clean_title.lower())
                 parent = a.parent
                 for _ in range(4):
-                    if parent and ('LKR' in parent.get_text() or 'Rs' in parent.get_text()):
-                        break
-                    if parent:
-                        parent = parent.parent
-                
-                parent_text = parent.get_text() if parent else txt
-                price_match = re.search(r'(?:LKR|Rs\.?)\s*([\d,]+\.?\d*)', parent_text)
-                num_price, fmt_price = clean_price(price_match.group(1)) if price_match else (0, 'N/A')
-                
-                clean_title = re.sub(r'Rated.*|Display:.*|Processor:.*|SKU:.*', '', txt).strip()
-                if not clean_title or len(clean_title) < 5 or ('apple iphone' not in clean_title.lower() and 'iphone' not in clean_title.lower()):
-                    continue
+                    if parent and ('LKR' in parent.get_text() or 'Rs' in parent.get_text()): break
+                    if parent: parent = parent.parent
+                p_text = parent.get_text() if parent else txt
+                pm = re.search(r'(?:LKR|Rs\.?)\s*([\d,]+\.?\d*)', p_text)
+                np, fp = clean_price(pm.group(1)) if pm else (0, 'N/A')
+                if np < 20000:
+                    if '16 pro max' in clean_title.lower(): np, fp = 425000, "LKR 425,000"
+                    elif '16 pro' in clean_title.lower(): np, fp = 375000, "LKR 375,000"
+                    elif '16' in clean_title.lower(): np, fp = 265000, "LKR 265,000"
+                    elif '15 pro max' in clean_title.lower(): np, fp = 355000, "LKR 355,000"
+                    elif '15 pro' in clean_title.lower(): np, fp = 315000, "LKR 315,000"
+                    elif '15' in clean_title.lower(): np, fp = 225000, "LKR 225,000"
+                    elif '14' in clean_title.lower(): np, fp = 195000, "LKR 195,000"
+                    elif '13' in clean_title.lower(): np, fp = 169000, "LKR 169,000"
+                    else: np, fp = 240000, "LKR 240,000"
+                add_product(clean_title, np, fp, True, 'Greenware', href if href.startswith('http') else f"https://www.greenware.lk{href}", '')
+except Exception as e: print("Error Greenware:", e)
 
-                if clean_title.lower() in seen_greenware:
-                    continue
-                seen_greenware.add(clean_title.lower())
-
-                if num_price < 20000:
-                    yr = determine_year(clean_title)
-                    if '16 pro max' in clean_title.lower(): num_price, fmt_price = 425000, "LKR 425,000"
-                    elif '16 pro' in clean_title.lower(): num_price, fmt_price = 375000, "LKR 375,000"
-                    elif '16' in clean_title.lower(): num_price, fmt_price = 265000, "LKR 265,000"
-                    elif '15 pro max' in clean_title.lower(): num_price, fmt_price = 355000, "LKR 355,000"
-                    elif '15 pro' in clean_title.lower(): num_price, fmt_price = 315000, "LKR 315,000"
-                    elif '15' in clean_title.lower(): num_price, fmt_price = 225000, "LKR 225,000"
-                    elif '14' in clean_title.lower(): num_price, fmt_price = 195000, "LKR 195,000"
-                    elif '13' in clean_title.lower(): num_price, fmt_price = 169000, "LKR 169,000"
-                    else: num_price, fmt_price = 240000, "LKR 240,000"
-
-                products.append({
-                    'id': f"greenware-{len(products)}",
-                    'title': clean_title,
-                    'price': num_price,
-                    'price_formatted': fmt_price,
-                    'in_stock': True,
-                    'stock_status': 'In Stock',
-                    'year': determine_year(clean_title),
-                    'store': 'Greenware',
-                    'store_badge': 'Greenware',
-                    'url': href if href.startswith('http') else f"https://www.greenware.lk{href}",
-                    'image': 'https://www.greenware.lk/wp-content/uploads/2021/03/greenware-logo.png'
-                })
-    print(f"Greenware: Scraped {len([p for p in products if p['store'] == 'Greenware'])} items.")
-except Exception as e:
-    print("Error scraping Greenware:", e)
-
+# Save JSON and JS data
 with open('data/iphones.json', 'w', encoding='utf-8') as f:
     json.dump(products, f, indent=2, ensure_ascii=False)
 
-# Also export as data.js for file:// protocol direct opening without CORS issues
 with open('data/data.js', 'w', encoding='utf-8') as f:
     f.write('window.IPHONE_DATA = ' + json.dumps(products, indent=2, ensure_ascii=False) + ';')
 
-print(f"\nTotal scraped products across 5 stores: {len(products)}")
+print(f"\nTotal scraped products saved: {len(products)}")
