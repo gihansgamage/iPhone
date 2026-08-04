@@ -101,9 +101,20 @@
                     </div>
                 </div>
 
+                <!-- Sort Order Option -->
+                <div class="filter-section">
+                    <h4 class="filter-title"><i class="fa-solid fa-arrow-down-wide-short"></i> Sort Order</h4>
+                    <select id="sortSelect" class="sidebar-select">
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="year_desc">Newest First</option>
+                        <option value="title_asc">Name: A to Z</option>
+                    </select>
+                </div>
+
                 <!-- Price Range Slider -->
                 <div class="filter-section">
-                    <h4 class="filter-title">Max Price</h4>
+                    <h4 class="filter-title"><i class="fa-solid fa-tag"></i> Max Price</h4>
                     <div class="price-slider-wrapper">
                         <span id="priceRangeValue" class="price-val-highlight">LKR 700,000</span>
                         <input type="range" id="priceRangeInput" min="100000" max="700000" step="10000" value="700000">
@@ -194,7 +205,7 @@
 
             <!-- RIGHT MAIN CONTENT AREA -->
             <main class="main-content-area">
-                <!-- Navigation Tabs & View Switcher -->
+                <!-- Navigation Tabs & Inline Search Bar -->
                 <div class="view-controls-bar">
                     <div class="view-tabs">
                         <button class="tab-btn active" data-view="grid">
@@ -208,6 +219,15 @@
                         </button>
                     </div>
 
+                    <!-- Inline Search Bar next to Price Analytics tab -->
+                    <div class="search-box-wrapper inline-search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchInput" placeholder="Search iPhone model ('16 Pro', '256GB')...">
+                        <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
                     <div class="compare-tray-trigger" id="compareTrayTrigger" style="display: none;">
                         <span class="tray-badge" id="compareCount">0</span>
                         <span>Selected to Compare</span>
@@ -215,33 +235,10 @@
                     </div>
                 </div>
 
-                <!-- Search & Active Tags Section -->
-                <div class="search-and-tags-box">
-                    <div class="search-box-wrapper">
-                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                        <input type="text" id="searchInput" placeholder="Search iPhone model (e.g. '16 Pro Max', '256GB', '15', 'SE')...">
-                        <button class="clear-search-btn" id="clearSearchBtn" style="display: none;">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-
-                    <div class="sort-row">
-                        <div class="filter-group">
-                            <label>Sort By:</label>
-                            <select id="sortSelect">
-                                <option value="price_asc">Price: Low to High</option>
-                                <option value="price_desc">Price: High to Low</option>
-                                <option value="year_desc">Newest First</option>
-                                <option value="title_asc">Name: A to Z</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Active Filter Tags Row -->
-                    <div class="active-filter-tags-row" id="activeFilterTagsContainer" style="display: none;">
-                        <span class="active-tags-label">Active Filters:</span>
-                        <div class="tags-list" id="tagsList"></div>
-                    </div>
+                <!-- Active Tags Row -->
+                <div class="active-filter-tags-row" id="activeFilterTagsContainer" style="display: none;">
+                    <span class="active-tags-label">Active Filters:</span>
+                    <div class="tags-list" id="tagsList"></div>
                 </div>
 
                 <!-- MAIN VIEW 1: PRODUCT CATALOG GRID -->

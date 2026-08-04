@@ -347,6 +347,33 @@ body {
     gap: 0.65rem;
 }
 
+.sidebar-select {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--apple-card-border);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.85rem;
+    color: var(--apple-text);
+    font-size: 0.88rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: var(--transition-apple);
+}
+
+[data-theme="dark"] .sidebar-select {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-select:focus {
+    border-color: var(--apple-blue);
+}
+
+.inline-search-box {
+    max-width: 320px;
+    flex: 1;
+}
+
 .filter-section-header {
     display: flex;
     justify-content: space-between;
