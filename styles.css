@@ -97,58 +97,42 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Moving Stores Ticker Banner (Right to Left) */
-.ticker-banner {
-    position: sticky;
-    top: 57px;
-    z-index: 89;
+/* Hero Plain Text Ticker (Moving Right to Left) */
+.hero-ticker-wrapper {
     width: 100%;
+    max-width: 800px;
+    margin: 0.85rem auto 0;
     overflow: hidden;
-    background: rgba(0, 113, 227, 0.05);
-    backdrop-filter: saturate(180%) blur(15px);
-    -webkit-backdrop-filter: saturate(180%) blur(15px);
-    border-bottom: 1px solid var(--apple-card-border);
-    padding: 0.5rem 0;
     white-space: nowrap;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
 }
 
-[data-theme="dark"] .ticker-banner {
-    background: rgba(255, 255, 255, 0.04);
-}
-
-.ticker-track {
+.hero-ticker-track {
     display: inline-flex;
-    gap: 2.5rem;
-    animation: ticker-move 30s linear infinite;
+    align-items: center;
+    gap: 0.85rem;
+    animation: hero-ticker-move 32s linear infinite;
 }
 
-.ticker-track:hover {
+.hero-ticker-track:hover {
     animation-play-state: paused;
 }
 
-.ticker-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--apple-text);
-    background: rgba(0, 0, 0, 0.03);
-    padding: 0.2rem 0.75rem;
-    border-radius: var(--radius-pill);
-    border: 1px solid var(--apple-card-border);
+.hero-ticker-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--apple-text-secondary);
+    letter-spacing: -0.015em;
 }
 
-[data-theme="dark"] .ticker-item {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.ticker-item i {
+.ticker-dot {
     color: var(--apple-blue);
-    font-size: 0.78rem;
+    font-size: 0.95rem;
 }
 
-@keyframes ticker-move {
+@keyframes hero-ticker-move {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
 }
