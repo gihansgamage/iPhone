@@ -104,9 +104,22 @@ function updateStatsBanner() {
     const lowest = Math.min(...allProducts.filter(p => p.price > 0).map(p => p.price));
     const inStockCount = allProducts.filter(p => p.in_stock).length;
 
+    const uniqueStores = new Set(allProducts.map(p => p.store));
+    const storeCount = uniqueStores.size;
+    const storeListStr = Array.from(uniqueStores).slice(0, 5).join(', ') + (storeCount > 5 ? ' & more' : '');
+
     document.getElementById('statTotalProducts').textContent = totalCount;
     document.getElementById('statLowestPrice').textContent = `LKR ${lowest.toLocaleString()}`;
     document.getElementById('statInStockCount').textContent = `${inStockCount} Models`;
+
+    const totalStoresEl = document.getElementById('statTotalStores');
+    if (totalStoresEl) totalStoresEl.textContent = `${storeCount} Stores`;
+
+    const storesListEl = document.getElementById('statStoresList');
+    if (storesListEl) storesListEl.textContent = storeListStr;
+
+    const headerStoresEl = document.getElementById('headerLiveStoresCount');
+    if (headerStoresEl) headerStoresEl.textContent = `${storeCount} Stores Live`;
 }
 
 function extractStorage(title) {
