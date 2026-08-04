@@ -172,6 +172,8 @@ body {
     color: var(--apple-blue);
     border-color: rgba(0, 113, 227, 0.2);
     font-weight: 700;
+    padding: 0.45rem 0.85rem;
+    font-size: 1.05rem;
 }
 
 .nav-compare-btn:hover {
