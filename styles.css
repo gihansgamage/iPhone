@@ -1083,18 +1083,99 @@ input:checked + .slider:before { transform: translateX(18px); }
 .tooltip-price { font-size: 0.95rem; font-weight: 800; color: #34c759; margin: 0.2rem 0; }
 .tooltip-stock { font-size: 0.72rem; }
 
-/* Dual Min/Max Range Sliders */
-.dual-range-wrapper {
+/* Single Dual-Thumb Seek Bar System */
+.single-dual-range-container {
     display: flex;
-    gap: 1.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
     width: 100%;
 }
 
-.range-subfield {
-    flex: 1;
+.range-values-display {
     display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.range-val-badge {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--apple-text-secondary);
+}
+
+.range-val-badge strong {
+    color: var(--apple-blue);
+    font-weight: 700;
+}
+
+.range-separator {
+    color: var(--apple-text-secondary);
+    font-weight: 600;
+}
+
+.dual-range-track-wrapper {
+    position: relative;
+    height: 8px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-pill);
+    margin: 0.4rem 0 0.6rem;
+}
+
+[data-theme="dark"] .dual-range-track-wrapper {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.range-track-highlight {
+    position: absolute;
+    height: 100%;
+    background: var(--apple-blue);
+    border-radius: var(--radius-pill);
+    top: 0;
+    left: 0%;
+    right: 0%;
+    pointer-events: none;
+}
+
+.range-thumb {
+    position: absolute;
+    width: 100%;
+    height: 8px;
+    top: 0;
+    left: 0;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.range-thumb::-webkit-slider-thumb {
+    height: 22px;
+    width: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--apple-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.range-thumb::-webkit-slider-thumb:hover {
+    transform: scale(1.18);
+}
+
+.range-thumb::-moz-range-thumb {
+    height: 22px;
+    width: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--apple-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .cell-model-name { font-weight: 600; color: var(--apple-text); }

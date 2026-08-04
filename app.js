@@ -643,7 +643,23 @@ function setupAnalyticsControls() {
     const minLabel = document.getElementById('analyticsMinPriceLabel');
     const maxLabel = document.getElementById('analyticsMaxPriceLabel');
 
+    function updateRangeHighlight() {
+        if (!minSlider || !maxSlider) return;
+        const minVal = parseInt(minSlider.value);
+        const maxVal = parseInt(maxSlider.value);
+        const minPercent = ((minVal - 100000) / 600000) * 100;
+        const maxPercent = 100 - (((maxVal - 100000) / 600000) * 100);
+
+        const highlight = document.getElementById('analyticsRangeHighlight');
+        if (highlight) {
+            highlight.style.left = `${minPercent}%`;
+            highlight.style.right = `${maxPercent}%`;
+        }
+    }
+
     if (minSlider && maxSlider && minLabel && maxLabel) {
+        updateRangeHighlight();
+
         minSlider.addEventListener('input', (e) => {
             analyticsMinPrice = parseInt(e.target.value);
             if (analyticsMinPrice > analyticsMaxPrice) {
@@ -652,6 +668,7 @@ function setupAnalyticsControls() {
                 maxLabel.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
             }
             minLabel.textContent = `LKR ${analyticsMinPrice.toLocaleString()}`;
+            updateRangeHighlight();
             renderAnalyticsView();
         });
 
@@ -663,6 +680,7 @@ function setupAnalyticsControls() {
                 minLabel.textContent = `LKR ${analyticsMinPrice.toLocaleString()}`;
             }
             maxLabel.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
+            updateRangeHighlight();
             renderAnalyticsView();
         });
     }

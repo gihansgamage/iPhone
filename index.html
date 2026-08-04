@@ -349,15 +349,17 @@
                     <div class="analytics-filter-card">
                         <div class="analytics-filter-row">
                             <div class="analytics-filter-group">
-                                <label><i class="fa-solid fa-sliders"></i> Price Range Window (LKR):</label>
-                                <div class="dual-range-wrapper">
-                                    <div class="range-subfield">
-                                        <span>Min: <strong id="analyticsMinPriceLabel" class="analytics-range-val">LKR 100,000</strong></span>
-                                        <input type="range" id="analyticsMinPriceSlider" min="100000" max="700000" step="10000" value="100000">
+                                <label><i class="fa-solid fa-sliders"></i> Price Range Filter (LKR):</label>
+                                <div class="single-dual-range-container">
+                                    <div class="range-values-display">
+                                        <span class="range-val-badge">Min: <strong id="analyticsMinPriceLabel">LKR 100,000</strong></span>
+                                        <span class="range-separator">—</span>
+                                        <span class="range-val-badge">Max: <strong id="analyticsMaxPriceLabel">LKR 700,000</strong></span>
                                     </div>
-                                    <div class="range-subfield">
-                                        <span>Max: <strong id="analyticsMaxPriceLabel" class="analytics-range-val">LKR 700,000</strong></span>
-                                        <input type="range" id="analyticsMaxPriceSlider" min="100000" max="700000" step="10000" value="700000">
+                                    <div class="dual-range-track-wrapper">
+                                        <div class="range-track-highlight" id="analyticsRangeHighlight"></div>
+                                        <input type="range" id="analyticsMinPriceSlider" class="range-thumb range-thumb-min" min="100000" max="700000" step="10000" value="100000">
+                                        <input type="range" id="analyticsMaxPriceSlider" class="range-thumb range-thumb-max" min="100000" max="700000" step="10000" value="700000">
                                     </div>
                                 </div>
                             </div>
