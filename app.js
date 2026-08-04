@@ -25,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initApp() {
     setupEventListeners();
+    setupAnalyticsControls();
     await loadData();
 }
 
@@ -56,7 +57,7 @@ async function loadData() {
         updateStatsBanner();
         renderGridView();
         renderMatrixView();
-        renderAnalyticsCharts();
+        renderAnalyticsView();
     } catch (err) {
         console.error('Error loading data:', err);
         document.getElementById('productGridContainer').innerHTML = `
@@ -192,7 +193,8 @@ function setupEventListeners() {
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             document.documentElement.setAttribute('data-theme', newTheme);
             themeBtn.innerHTML = newTheme === 'light' ? '<i class="fa-solid fa-moon"></i> Dark Theme' : '<i class="fa-solid fa-sun"></i> Light Theme';
-            renderAnalyticsCharts();
+            renderMatrixView();
+            renderAnalyticsView();
         });
     }
 
@@ -258,6 +260,9 @@ function setupEventListeners() {
             const targetView = tab.dataset.view;
             document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
             document.getElementById(`${targetView}View`).classList.add('active');
+
+            if (targetView === 'matrix') renderMatrixView();
+            if (targetView === 'analytics') renderAnalyticsView();
         });
     });
 
@@ -528,9 +533,10 @@ function closeCompareModal() {
     document.getElementById('compareModal').classList.remove('active');
 }
 
-// Render Side-by-Side Comparison Matrix Table
+// Render Side-by-Side Heatmap Matrix Table
 function renderMatrixView() {
     const tbody = document.getElementById('matrixTableBody');
+    if (!tbody) return;
 
     // Group products by canonical model family
     const grouped = {};
@@ -559,25 +565,39 @@ function renderMatrixView() {
 
     const stores = ['Greenware', 'LuxuryX', 'Rooter', 'ONEi', 'Celltronics', 'Francium', 'AppleMall', 'GeniusMobile', 'XMobile', 'AppleiStore', 'LaserMobile', 'SmartMobile'];
 
-    tbody.innerHTML = rows.slice(0, 40).map(r => {
-        // Find lowest price among stores present for this model
+    tbody.innerHTML = rows.slice(0, 50).map(r => {
+        // Find lowest and highest price among stores present for this model
         let lowestPrice = Infinity;
+        let highestPrice = -Infinity;
+        let validPricesCount = 0;
+
         stores.forEach(s => {
-            if (r.stores[s] && r.stores[s].price > 0 && r.stores[s].price < lowestPrice) {
-                lowestPrice = r.stores[s].price;
+            const item = r.stores[s];
+            if (item && item.price > 0 && item.in_stock) {
+                if (item.price < lowestPrice) lowestPrice = item.price;
+                if (item.price > highestPrice) highestPrice = item.price;
+                validPricesCount++;
             }
         });
 
         const storeCells = stores.map(s => {
             const item = r.stores[s];
-            if (!item) return `<td class="cell-na">-</td>`;
+            // If unavailable or out of stock in store -> keep clean white / card dark
+            if (!item || !item.in_stock || item.price <= 0) {
+                return `<td class="cell-heatmap cell-na">-</td>`;
+            }
 
             const isLowest = item.price === lowestPrice;
+            const isHighest = validPricesCount > 1 && item.price === highestPrice;
+
+            let cellClass = 'cell-mid';
+            if (isLowest) cellClass = 'cell-lowest';
+            else if (isHighest) cellClass = 'cell-highest';
+
             return `
-                <td>
-                    <span class="cell-price ${isLowest ? 'lowest' : ''}">
-                        ${item.price_formatted}
-                    </span>
+                <td class="cell-heatmap ${cellClass}">
+                    <span>${item.price_formatted}</span>
+                    ${isLowest ? '<span style="font-size: 0.68rem; display: block; color: var(--apple-green);">Lowest</span>' : ''}
                 </td>
             `;
         }).join('');
@@ -585,7 +605,7 @@ function renderMatrixView() {
         // Determine best price store name
         let bestStore = 'N/A';
         stores.forEach(s => {
-            if (r.stores[s] && r.stores[s].price === lowestPrice) {
+            if (r.stores[s] && r.stores[s].price === lowestPrice && r.stores[s].in_stock) {
                 bestStore = s;
             }
         });
@@ -595,102 +615,168 @@ function renderMatrixView() {
                 <td class="cell-model-name">${r.model}</td>
                 <td><span class="badge-year">${r.year}</span></td>
                 ${storeCells}
-                <td><strong style="color: var(--accent-emerald);">${bestStore}</strong></td>
+                <td><strong style="color: var(--apple-green); font-weight: 700;">${bestStore}</strong></td>
             </tr>
         `;
     }).join('');
 }
 
-// Render Chart Analytics
-function renderAnalyticsCharts() {
-    const yearAvg = {};
-    const yearCounts = {};
+// Global state for Analytics view
+let analyticsMaxPrice = 700000;
+let analyticsSelectedStorage = 'all';
 
+function setupAnalyticsControls() {
+    const slider = document.getElementById('analyticsPriceSlider');
+    const label = document.getElementById('analyticsPriceRangeLabel');
+
+    if (slider && label) {
+        slider.addEventListener('input', (e) => {
+            analyticsMaxPrice = parseInt(e.target.value);
+            label.textContent = `LKR ${analyticsMaxPrice.toLocaleString()}`;
+            renderAnalyticsView();
+        });
+    }
+
+    const pillGroup = document.getElementById('analyticsStoragePills');
+    if (pillGroup) {
+        pillGroup.querySelectorAll('.pill-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                pillGroup.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                analyticsSelectedStorage = btn.dataset.storage;
+                renderAnalyticsView();
+            });
+        });
+    }
+}
+
+// Render Interactive Price Range Analytics Dashboard
+function renderAnalyticsView() {
+    const filtered = allProducts.filter(p => {
+        if (p.price > 0 && p.price > analyticsMaxPrice) return false;
+        if (analyticsSelectedStorage !== 'all') {
+            const st = extractStorage(p.title);
+            if (!st || st !== analyticsSelectedStorage) return false;
+        }
+        return true;
+    });
+
+    const summaryBar = document.getElementById('analyticsSummaryBar');
+    if (summaryBar) {
+        summaryBar.innerHTML = `Found <strong>${filtered.length}</strong> iPhone listings under <strong>LKR ${analyticsMaxPrice.toLocaleString()}</strong> ${analyticsSelectedStorage !== 'all' ? `(${analyticsSelectedStorage})` : ''}`;
+    }
+
+    // Render Products Grid in Analytics Tab
+    const grid = document.getElementById('analyticsProductGrid');
+    if (grid) {
+        if (filtered.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--apple-text-secondary);">No iPhone models found in this price range & capacity. Try increasing the max price slider!</div>`;
+        } else {
+            grid.innerHTML = filtered.map(p => `
+                <div class="card-product ${p.isBestDeal ? 'is-best-deal' : ''}">
+                    ${p.isBestDeal ? '<div class="best-deal-ribbon"><i class="fa-solid fa-bolt"></i> Best Deal</div>' : ''}
+                    <div class="card-image-area">
+                        <img src="${p.image}" alt="${p.title}" loading="lazy" onerror="this.onerror=null; this.src='https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg';">
+                    </div>
+                    <div class="card-header-meta">
+                        <span class="badge-store ${p.store.toLowerCase()}">${p.store}</span>
+                        <span class="badge-year">${p.year}</span>
+                    </div>
+                    <h3 class="card-title" title="${p.title}">${p.title}</h3>
+                    <div class="card-stock-row ${p.in_stock ? 'stock-in' : 'stock-out'}">
+                        <span class="stock-dot"></span>
+                        <span>${p.stock_status}</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="price-display">${p.price_formatted}</div>
+                        <a href="${p.url}" target="_blank" rel="noopener" class="btn btn-buy">
+                            Go to Store <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    renderAnalyticsCharts(filtered);
+}
+
+// Render Interactive Charts based on filtered analytics dataset
+function renderAnalyticsCharts(dataset = allProducts) {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const textColor = isDark ? '#f5f5f7' : '#1d1d1f';
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)';
 
-    allProducts.forEach(p => {
-        if (p.price > 0) {
-            yearAvg[p.year] = (yearAvg[p.year] || 0) + p.price;
-            yearCounts[p.year] = (yearCounts[p.year] || 0) + 1;
+    // Chart 1: Avg Price by Storage Capacity
+    const storagePrices = { '128GB': [], '256GB': [], '512GB': [], '1TB': [] };
+    dataset.forEach(p => {
+        const st = extractStorage(p.title);
+        if (st && storagePrices[st] && p.price > 0) {
+            storagePrices[st].push(p.price);
         }
     });
 
-    const years = Object.keys(yearAvg).sort((a, b) => a - b);
-    const avgPrices = years.map(y => Math.round(yearAvg[y] / yearCounts[y]));
+    const storageLabels = Object.keys(storagePrices);
+    const avgStoragePrices = storageLabels.map(st => {
+        const arr = storagePrices[st];
+        return arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
+    });
 
-    // Chart 1: Avg Price by Year
-    const ctx1 = document.getElementById('priceByYearChart').getContext('2d');
-    if (priceByYearChart) priceByYearChart.destroy();
-    priceByYearChart = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-            labels: years.map(y => `iPhone ${y}`),
-            datasets: [{
-                label: 'Average Price (LKR)',
-                data: avgPrices,
-                backgroundColor: 'rgba(0, 113, 227, 0.65)',
-                borderColor: '#0071e3',
-                borderWidth: 1.5,
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
+    const ctx1 = document.getElementById('priceByYearChart');
+    if (ctx1) {
+        if (priceByYearChart) priceByYearChart.destroy();
+        priceByYearChart = new Chart(ctx1.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: storageLabels,
+                datasets: [{
+                    label: 'Average Price (LKR)',
+                    data: avgStoragePrices,
+                    backgroundColor: 'rgba(0, 113, 227, 0.7)',
+                    borderColor: '#0071e3',
+                    borderWidth: 1.5,
+                    borderRadius: 8
+                }]
             },
-            scales: {
-                y: {
-                    ticks: { color: textColor },
-                    grid: { color: gridColor }
-                },
-                x: {
-                    ticks: { color: textColor },
-                    grid: { display: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { ticks: { color: textColor }, grid: { color: gridColor } },
+                    x: { ticks: { color: textColor }, grid: { display: false } }
                 }
             }
-        }
-    });
+        });
+    }
 
-    // Chart 2: Store breakdown
-    const storeCounts = {};
-    allProducts.forEach(p => {
-        storeCounts[p.store] = (storeCounts[p.store] || 0) + 1;
-    });
+    // Chart 2: In Stock vs Out of Stock Ratio
+    const inStock = dataset.filter(p => p.in_stock).length;
+    const outStock = dataset.filter(p => !p.in_stock).length;
 
-    const storeNames = Object.keys(storeCounts);
-    const storeData = storeNames.map(s => storeCounts[s]);
-
-    const ctx2 = document.getElementById('storeStockChart').getContext('2d');
-    if (storeStockChart) storeStockChart.destroy();
-    storeStockChart = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: storeNames,
-            datasets: [{
-                data: storeData,
-                backgroundColor: [
-                    '#ec4899', // Celltronics
-                    '#10b981', // Greenware
-                    '#f59e0b', // LuxuryX
-                    '#8b5cf6', // ONEi
-                    '#06b6d4'  // Rooter
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { color: textColor, padding: 15, font: { family: 'Plus Jakarta Sans', weight: '600' } }
+    const ctx2 = document.getElementById('storeStockChart');
+    if (ctx2) {
+        if (storeStockChart) storeStockChart.destroy();
+        storeStockChart = new Chart(ctx2.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['In Stock', 'Out of Stock'],
+                datasets: [{
+                    data: [inStock, outStock],
+                    backgroundColor: ['#34c759', '#ff3b30'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: textColor, padding: 15, font: { family: 'Plus Jakarta Sans', weight: '600' } }
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 }

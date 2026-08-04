@@ -963,7 +963,7 @@ input:checked + .slider:before { transform: translateX(18px); }
     color: var(--apple-bg);
 }
 
-/* Side-by-Side Matrix Table - Apple Clean Format */
+/* Side-by-Side Heatmap Matrix Table */
 .matrix-header-info { margin-bottom: 1.5rem; }
 .matrix-header-info h2 { font-size: 1.75rem; font-weight: 600; }
 .matrix-header-info p { color: var(--apple-text-secondary); font-size: 0.95rem; }
@@ -981,17 +981,17 @@ input:checked + .slider:before { transform: translateX(18px); }
     width: 100%;
     border-collapse: collapse;
     text-align: left;
-    min-width: 900px;
+    min-width: 1100px;
 }
 
 .comparison-matrix-table th {
     background: rgba(0, 0, 0, 0.03);
-    padding: 1rem 1.25rem;
-    font-size: 0.82rem;
+    padding: 1rem 1.1rem;
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--apple-text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     border-bottom: 1px solid var(--apple-card-border);
 }
 
@@ -1000,27 +1000,160 @@ input:checked + .slider:before { transform: translateX(18px); }
 }
 
 .comparison-matrix-table td {
-    padding: 1.1rem 1.25rem;
+    padding: 0.95rem 1.1rem;
     border-bottom: 1px solid var(--apple-card-border);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
 }
 
-.comparison-matrix-table tr:hover {
-    background: rgba(0, 0, 0, 0.02);
+/* Heatmap Matrix Cell System */
+.comparison-matrix-table td.cell-heatmap {
+    transition: var(--transition-apple);
+    text-align: center;
+}
+
+/* Lowest Price Cell - Apple Vibrant Green */
+.comparison-matrix-table td.cell-lowest {
+    background: #e6f9ed;
+    color: #1b5e20;
+    font-weight: 700;
+    border-left: 3px solid var(--apple-green);
+}
+[data-theme="dark"] .comparison-matrix-table td.cell-lowest {
+    background: rgba(52, 199, 89, 0.22);
+    color: #34c759;
+    border-left: 3px solid #34c759;
+}
+
+/* Mid Price Cell - Soft Neutral Tint */
+.comparison-matrix-table td.cell-mid {
+    background: rgba(0, 113, 227, 0.03);
+    color: var(--apple-text);
+}
+[data-theme="dark"] .comparison-matrix-table td.cell-mid {
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--apple-text);
+}
+
+/* Highest Price Cell - Soft Warning Tint */
+.comparison-matrix-table td.cell-highest {
+    background: rgba(217, 119, 6, 0.09);
+    color: var(--apple-orange);
+}
+[data-theme="dark"] .comparison-matrix-table td.cell-highest {
+    background: rgba(255, 159, 10, 0.16);
+    color: #ff9f0a;
+}
+
+/* Unavailable Cell - White in light theme, #161617 in dark theme */
+.comparison-matrix-table td.cell-na {
+    background: #ffffff;
+    color: var(--apple-text-muted);
+}
+[data-theme="dark"] .comparison-matrix-table td.cell-na {
+    background: #161617;
+    color: var(--apple-text-muted);
 }
 
 .cell-model-name { font-weight: 600; color: var(--apple-text); }
-.cell-price { font-weight: 500; }
-.cell-price.lowest {
-    color: var(--apple-green);
-    font-weight: 700;
-    background: var(--apple-green-bg);
-    padding: 0.25rem 0.6rem;
-    border-radius: var(--radius-pill);
-    display: inline-block;
+
+/* Interactive Price Analytics Controls */
+.analytics-filter-card {
+    background: var(--apple-card-bg);
+    border: 1px solid var(--apple-card-border);
+    box-shadow: var(--apple-card-shadow);
+    border-radius: var(--radius-card);
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
 }
 
-.cell-na { color: var(--apple-text-muted); font-style: italic; }
+.analytics-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.analytics-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    flex: 1;
+    min-width: 260px;
+}
+
+.analytics-filter-group label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--apple-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.analytics-range-val {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--apple-blue);
+}
+
+.storage-pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.pill-btn {
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--apple-card-border);
+    color: var(--apple-text);
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-apple);
+}
+
+[data-theme="dark"] .pill-btn {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.pill-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.pill-btn.active {
+    background: var(--apple-blue);
+    color: #ffffff;
+    border-color: var(--apple-blue);
+}
+
+.analytics-summary-bar {
+    padding-top: 1rem;
+    border-top: 1px solid var(--apple-card-border);
+    font-size: 0.9rem;
+    color: var(--apple-text-secondary);
+}
+
+.analytics-products-section {
+    margin-top: 2.5rem;
+}
+
+.analytics-section-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--apple-text);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
 
 /* Analytics View */
 .analytics-header { margin-bottom: 1.5rem; }

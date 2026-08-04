@@ -324,25 +324,62 @@
                     </div>
                 </div>
 
-                <!-- MAIN VIEW 3: PRICE ANALYTICS CHART -->
+                <!-- MAIN VIEW 3: INTERACTIVE PRICE RANGE ANALYTICS -->
                 <div class="view-content" id="analyticsView">
                     <div class="analytics-header">
-                        <h2>Price Analytics & Market Insights</h2>
-                        <p>Visual breakdown of average prices and availability per generation across Sri Lanka.</p>
+                        <h2>Interactive Price Range Analytics & Insights</h2>
+                        <p>Select your target price range and storage capacity to discover matching iPhones, stock availability, and market price distribution across all 12 Sri Lankan stores.</p>
                     </div>
 
+                    <!-- Interactive Price Range & Filter Bar for Analytics -->
+                    <div class="analytics-filter-card">
+                        <div class="analytics-filter-row">
+                            <div class="analytics-filter-group">
+                                <label><i class="fa-solid fa-sliders"></i> Max Price Limit:</label>
+                                <div class="range-inputs-wrapper">
+                                    <span id="analyticsPriceRangeLabel" class="analytics-range-val">LKR 700,000</span>
+                                    <input type="range" id="analyticsPriceSlider" min="100000" max="700000" step="10000" value="700000">
+                                </div>
+                            </div>
+
+                            <div class="analytics-filter-group">
+                                <label><i class="fa-solid fa-sd-card"></i> Storage Capacity:</label>
+                                <div class="storage-pill-group" id="analyticsStoragePills">
+                                    <button class="pill-btn active" data-storage="all">All Sizes</button>
+                                    <button class="pill-btn" data-storage="128GB">128GB</button>
+                                    <button class="pill-btn" data-storage="256GB">256GB</button>
+                                    <button class="pill-btn" data-storage="512GB">512GB</button>
+                                    <button class="pill-btn" data-storage="1TB">1TB</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analytics-summary-bar" id="analyticsSummaryBar">
+                            <span>Showing matching iPhone models in your selected price range & specs</span>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Charts Grid -->
                     <div class="charts-grid">
                         <div class="chart-card">
-                            <h3>Average Price by iPhone Generation (LKR)</h3>
+                            <h3>Average Price by Storage Capacity (LKR)</h3>
                             <div class="chart-container">
                                 <canvas id="priceByYearChart"></canvas>
                             </div>
                         </div>
                         <div class="chart-card">
-                            <h3>Product Listings by Store</h3>
+                            <h3>In Stock vs Out of Stock Ratio</h3>
                             <div class="chart-container">
                                 <canvas id="storeStockChart"></canvas>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Analytics Filtered Products Grid -->
+                    <div class="analytics-products-section">
+                        <h3 class="analytics-section-title"><i class="fa-solid fa-mobile-screen"></i> Matching iPhones in Selected Price Range</h3>
+                        <div class="product-grid" id="analyticsProductGrid">
+                            <!-- Dynamic interactive cards rendered here -->
                         </div>
                     </div>
                 </div>
