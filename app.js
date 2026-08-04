@@ -288,7 +288,9 @@ function setupEventListeners() {
     if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeMobileSidebar);
     if (backdrop) backdrop.addEventListener('click', closeMobileSidebar);
 
-    // Compare Tray Click
+    // Compare Buttons Click
+    const navCompareBtn = document.getElementById('navCompareBtn');
+    if (navCompareBtn) navCompareBtn.addEventListener('click', openCompareModal);
     document.getElementById('compareTrayTrigger').addEventListener('click', openCompareModal);
     document.getElementById('closeModalBtn').addEventListener('click', closeCompareModal);
 
@@ -467,9 +469,8 @@ function renderGridView() {
                         </a>
                         <button class="btn-compare-check ${isSelected ? 'selected' : ''}" 
                                 onclick="toggleCompareItem('${p.id}')" 
-                                title="${isSelected ? 'Remove from Comparison List' : 'Add to Compare List'}">
-                            <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-scale-balanced'}"></i>
-                            <span>${isSelected ? 'Added' : 'Compare'}</span>
+                                title="${isSelected ? 'Remove from compare list' : 'Add to compare list'}">
+                            <i class="fa-solid ${isSelected ? 'fa-check' : 'fa-plus'}"></i>
                         </button>
                     </div>
                 </div>
@@ -492,14 +493,21 @@ function toggleCompareItem(id) {
 
     updateCompareTray();
     renderGridView();
+    if (document.getElementById('analyticsView').classList.contains('active')) {
+        renderAnalyticsView();
+    }
 }
 
 function updateCompareTray() {
     const trigger = document.getElementById('compareTrayTrigger');
     const countBadge = document.getElementById('compareCount');
+    const navCountBadge = document.getElementById('navCompareCount');
 
-    countBadge.textContent = selectedCompareIds.size;
-    trigger.style.display = selectedCompareIds.size > 0 ? 'flex' : 'none';
+    if (countBadge) countBadge.textContent = selectedCompareIds.size;
+    if (navCountBadge) {
+        navCountBadge.textContent = selectedCompareIds.size;
+    }
+    if (trigger) trigger.style.display = selectedCompareIds.size > 0 ? 'flex' : 'none';
 }
 
 function openCompareModal() {
@@ -744,9 +752,8 @@ function renderAnalyticsView() {
                             </a>
                             <button class="btn-compare-check ${selectedCompareIds.has(p.id) ? 'selected' : ''}" 
                                     onclick="toggleCompareItem('${p.id}')" 
-                                    title="${selectedCompareIds.has(p.id) ? 'Remove from Comparison List' : 'Add to Compare List'}">
-                                <i class="fa-solid ${selectedCompareIds.has(p.id) ? 'fa-check' : 'fa-scale-balanced'}"></i>
-                                <span>${selectedCompareIds.has(p.id) ? 'Added' : 'Compare'}</span>
+                                    title="${selectedCompareIds.has(p.id) ? 'Remove from compare list' : 'Add to compare list'}">
+                                <i class="fa-solid ${selectedCompareIds.has(p.id) ? 'fa-check' : 'fa-plus'}"></i>
                             </button>
                         </div>
                     </div>
